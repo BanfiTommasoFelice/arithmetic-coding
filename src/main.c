@@ -8,7 +8,7 @@ i32 main(void) {
     u32    d;
     BigNum n = bignum_read_hex(stdin);
     fscanf(stdin, "%x", &d);
-    bignum_print_hex(stdout, n);
+    bignum_print_hex(stdout, n, 1);
     fprintf(stdout, "\n");
     bignum_print_base(stdout, n, 2);
     fprintf(stdout, "\n");

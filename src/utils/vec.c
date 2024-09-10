@@ -16,6 +16,12 @@ u64Vec u64vec_new(u64 cap) {
     return v;
 }
 
+u64Vec u64vec_new_init(u64 cap, u64 n) {
+    u64Vec v = u64vec_new(cap);
+    for (u64 i = 0; i < cap; i++) v.ptr[i] = n;
+    return v;
+}
+
 u64Vec u64vec_clone(u64Vec v) {
     u64Vec w = {
         .cap = v.cap,
@@ -29,7 +35,7 @@ u64Vec u64vec_clone(u64Vec v) {
 
 void u64vec_shrink(u64Vec *v) {
     if (v->len < v->cap) {
-        v->ptr = realloc(v->ptr, v->len);
+        v->ptr = realloc(v->ptr, v->len * sizeof(*v->ptr));
         assert(v->ptr);
         v->cap = v->len;
     } else assert(v->len == v->cap);

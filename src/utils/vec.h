@@ -9,6 +9,7 @@ typedef struct _u64Vec {
 } u64Vec;
 
 u64Vec u64vec_new(u64 cap);
+u64Vec u64vec_new_init(u64 cap, u64 n);
 void   u64vec_shrink(u64Vec *v);
 u64Vec u64vec_clone(u64Vec v);
 void   u64vec_resize(u64Vec *v, u64 cap);

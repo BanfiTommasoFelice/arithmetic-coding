@@ -1,13 +1,13 @@
 CXX                = gcc
 CXXFLAGS_COMMON    = -std=c17 -Wall -Wextra
-CXXFLAGS_RELEASE   = $(CXXFLAGS_COMMON) -O3
-CXXFLAGS_RELEASE_2 = $(CXXFLAGS_RELEASE) --static -DNDEBUG -ffast-math
+CXXFLAGS_FAST      = $(CXXFLAGS_COMMON) -O3 -ffast-math
+CXXFLAGS_RELEASE   = $(CXXFLAGS_FAST)   --static -DNDEBUG 
 CXXFLAGS_DEBUG     = $(CXXFLAGS_COMMON) -O0 -g3 -fsanitize=address,undefined
 CXXFLAGS_LINK      =
 
 MODE ?= debug
 ifeq ($(MODE), fast)
-	CXXFLAGS = $(CXXFLAGS_RELEASE_2)
+	CXXFLAGS = $(CXXFLAGS_FAST)
 else ifeq ($(MODE), release)
 	CXXFLAGS = $(CXXFLAGS_RELEASE)
 else
