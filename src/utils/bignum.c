@@ -39,9 +39,11 @@ void bignum_free(BigNum n) {
 
 void bignum_set_bit(BigNum *n, u64 pos, u64 val) {
     assert(pos < n->cap << 6);
-    if (pos >= n->len << 6) n->len = (pos + 0x3f) >> 6;
-    if (val) n->ptr[pos << 6] |= 1ull << (pos & 0x3f);
-    else n->ptr[pos << 6] &= ~(1ull << (pos & 0x3f));
+    n->len       = n->len << 6 > pos ? n->len : (pos + 0x3f) >> 6;
+    u64 idx      = pos >> 6;
+    u64 a        = (val ? n->ptr[idx] : ~n->ptr[idx]);
+    a           |= 1ull << (pos & 0x3f);
+    n->ptr[idx]  = val ? a : ~a;
 }
 
 u64 bignum_is_set_bit(BigNum n, u64 pos) {
@@ -52,19 +54,18 @@ u64 bignum_is_set_bit(BigNum n, u64 pos) {
 BigNum bignum_read(FILE *stream) {
     String s = string_read(stream);
     for (u64 i = 0; i < s.len - 1; i++) assert(s.ptr[i] >= '0' && s.ptr[i] <= '9');
-    BigNum n         = bignum_new((s.len * 4 + 63) / 64);  // 4 > log2(10)
+    BigNum n         = bignum_new(((s.len << 2) + 63) >> 6);  // 4 > log2(10)
     u64    left_most = 0, pos = 0;
     while (left_most <= s.len - 2) {
-        bignum_set_bit(&n, pos++, (s.ptr[s.len - 2] - '0') % 2);
-        s.ptr[s.len - 2] = (s.ptr[s.len - 2] - '0') / 2 + '0';
+        bignum_set_bit(&n, pos++, (s.ptr[s.len - 2] - '0') & 1);
+        s.ptr[s.len - 2] = ((s.ptr[s.len - 2] - '0') >> 1) + '0';
         for (u64 i = s.len - 3; i >= left_most && i != UINT64_MAX; i--) {
-            s.ptr[i + 1] += 5 * ((s.ptr[i] - '0') % 2);
-            s.ptr[i]      = (s.ptr[i] - '0') / 2 + '0';
+            s.ptr[i + 1] += 5 * ((s.ptr[i] - '0') & 1);
+            s.ptr[i]      = ((s.ptr[i] - '0') >> 1) + '0';
         }
         left_most += (s.ptr[left_most] == '0');
     }
     string_free(s);
-    n.len = (pos + 63) / 64;
     bignum_shrink(&n);
     return n;
 }
@@ -73,11 +74,11 @@ BigNum bignum_read_hex(FILE *stream) {
     String s = string_read(stream);
     for (u64 i = 0; i < s.len - 1; i++)
         assert((s.ptr[i] >= '0' && s.ptr[i] <= '9') || (s.ptr[i] >= 'a' && s.ptr[i] <= 'f'));
-    BigNum n = bignum_new((s.len + 15) / 16);
+    BigNum n = bignum_new((s.len + 15) >> 4);
     n.len    = n.cap;
     for (u64 i = 0; i < n.len - 1; i++) {
-        sscanf(s.ptr + s.len - (i + 1) * 16, "%lx", &n.ptr[i]);
-        s.ptr[s.len - (i + 1) * 16] = '\0';
+        sscanf(s.ptr + s.len - ((i + 1) << 4), "%lx", &n.ptr[i]);
+        s.ptr[s.len - ((i + 1) << 4)] = '\0';
     }
     sscanf(s.ptr, "%lx", &n.ptr[n.len - 1]);
     string_free(s);
@@ -111,7 +112,7 @@ String bignum_to_string_hex(BigNum n, u32 space) {
         for (u32 i = n.len - 1; i != UINT32_MAX; i--)
             sprintf(s.ptr + ((n.len - 1 - i) * (space ? 17 : 16)), "%016lx ", n.ptr[i]);
     }
-    s.len        = s.cap - 1;
+    s.len = s.cap - 1;
     return s;
 }
 
@@ -163,4 +164,3 @@ u64Vec bignum_to_base(BigNum n, u64 b) {
     bignum_free(n);
     return v;
 }
-

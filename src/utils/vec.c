@@ -9,6 +9,7 @@
 #define _IMPLEMENT_VEC(_type_)                                                        \
                                                                                       \
     _type_##Vec _type_##vec_new(u64 cap) {                                            \
+        assert(cap);                                                                  \
         _type_##Vec v = {                                                             \
             .cap = cap,                                                               \
             .len = 0,                                                                 \
@@ -45,6 +46,7 @@
                                                                                       \
     void _type_##vec_resize(_type_##Vec *v, u64 cap) {                                \
         if (v->cap == cap) return;                                                    \
+        v->len = v->len < v->cap ? v->len : v->cap;                                   \
         v->cap = cap;                                                                 \
         v->ptr = realloc(v->ptr, cap * sizeof(*v->ptr));                              \
         assert(v->ptr);                                                               \
