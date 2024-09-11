@@ -129,7 +129,7 @@ void bignum_print_hex(FILE *stream, BigNum x, u32 dbg) {
 
 void bignum_print_base(FILE *stream, BigNum x, u64 b) {
     u64Vec v = bignum_to_base(x, b);
-    u64vec_print_rev(stream, v);
+    u64vec_print_rev(stream, v, "%lu");
     u64vec_free(v);
 }
 
