@@ -15,7 +15,9 @@ void           bignum_shrink(BigNum *n);
 void           bignum_resize(BigNum *n, u64 cap);
 void           bignum_clean(BigNum *c);
 void           bignum_free(BigNum n);
-void           bignum_set_bit(BigNum *n, u64 pos, u64 val);
+void           bignum_force_bit(BigNum *n, u64 pos, u8 val);
+void           bignum_set_bit(BigNum *n, u64 pos);
+void           bignum_unset_bit(BigNum *n, u64 pos);
 u64            bignum_is_set_bit(BigNum n, u64 pos);
 
 BigNum         bignum_read(FILE *stream);

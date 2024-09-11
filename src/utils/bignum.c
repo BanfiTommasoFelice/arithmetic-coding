@@ -37,13 +37,24 @@ void bignum_free(BigNum n) {
     return u64vec_free(n);
 }
 
-void bignum_set_bit(BigNum *n, u64 pos, u64 val) {
+void bignum_force_bit(BigNum *n, u64 pos, u8 val) {
     assert(pos < n->cap << 6);
     n->len       = n->len << 6 > pos ? n->len : (pos + 0x3f) >> 6;
     u64 idx      = pos >> 6;
     n->ptr[idx] ^= val - 1;
     n->ptr[idx] |= 1ull << (pos & 0x3f);
     n->ptr[idx] ^= val - 1;
+}
+
+void bignum_set_bit(BigNum *n, u64 pos) {
+    assert(pos < n->cap << 6);
+    n->len            = n->len << 6 > pos ? n->len : (pos + 0x3f) >> 6;
+    n->ptr[pos >> 6] |= 1ull << (pos & 0x3f);
+}
+
+void bignum_unset_bit(BigNum *n, u64 pos) {
+    assert(pos < n->len << 6);
+    n->ptr[pos >> 6] &= ~(1ull << (pos & 0x3f));
 }
 
 u64 bignum_is_set_bit(BigNum n, u64 pos) {
@@ -57,7 +68,7 @@ BigNum bignum_read(FILE *stream) {
     BigNum n         = bignum_new(((s.len << 2) + 63) >> 6);  // 4 > log2(10)
     u64    left_most = 0, pos = 0;
     while (left_most <= s.len - 2) {
-        bignum_set_bit(&n, pos++, (s.ptr[s.len - 2] - '0') & 1);
+        bignum_force_bit(&n, pos++, (s.ptr[s.len - 2] - '0') & 1);
         s.ptr[s.len - 2] = ((s.ptr[s.len - 2] - '0') >> 1) + '0';
         for (u64 i = s.len - 3; i >= left_most && i != UINT64_MAX; i--) {
             s.ptr[i + 1] += 5 * ((s.ptr[i] - '0') & 1);
