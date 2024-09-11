@@ -46,14 +46,18 @@
                                                                                       \
     void _type_##vec_resize(_type_##Vec *v, u64 cap) {                                \
         if (v->cap == cap) return;                                                    \
-        v->len = v->len < v->cap ? v->len : v->cap;                                   \
+        v->len = min(v->len, cap);                                                    \
         v->cap = cap;                                                                 \
         v->ptr = realloc(v->ptr, cap * sizeof(*v->ptr));                              \
         assert(v->ptr);                                                               \
     }                                                                                 \
                                                                                       \
+    void _type_##vec_double(_type_##Vec *v) {                                         \
+        _type_##vec_resize(v, v->cap * 2);                                            \
+    }                                                                                 \
+                                                                                      \
     void _type_##vec_push(_type_##Vec *v, _type_ digit) {                             \
-        if (v->len == v->cap) _type_##vec_resize(v, v->cap * 2);                      \
+        if (v->len == v->cap) _type_##vec_double(v);                                  \
         v->ptr[v->len] = digit;                                                       \
         v->len++;                                                                     \
     }                                                                                 \
@@ -87,4 +91,6 @@
     }
 
 _IMPLEMENT_VEC(u64)
+_IMPLEMENT_VEC(u32)
+_IMPLEMENT_VEC(u16)
 _IMPLEMENT_VEC(u8)

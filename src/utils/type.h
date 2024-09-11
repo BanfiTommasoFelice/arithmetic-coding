@@ -22,3 +22,7 @@ typedef struct _u32_pair {
 typedef struct _u64_pair {
     u64 first, second;
 } u64_pair;
+
+#define reverse_u8(b) ((u8)((((b) * 0x80200802ULL) & 0x0884422110ULL) * 0x0101010101ULL >> 32))
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#define min(a, b) ((a) < (b) ? (a) : (b))

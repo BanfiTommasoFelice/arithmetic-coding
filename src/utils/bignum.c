@@ -39,7 +39,7 @@ void bignum_free(BigNum n) {
 
 void bignum_force_bit(BigNum *n, u64 pos, u8 val) {
     assert(pos < n->cap << 6);
-    n->len       = n->len << 6 > pos ? n->len : (pos + 0x3f) >> 6;
+    n->len       = max(n->len, (pos + 0x3f) >> 6);
     u64 idx      = pos >> 6;
     n->ptr[idx] ^= val - 1;
     n->ptr[idx] |= 1ull << (pos & 0x3f);
@@ -48,7 +48,7 @@ void bignum_force_bit(BigNum *n, u64 pos, u8 val) {
 
 void bignum_set_bit(BigNum *n, u64 pos) {
     assert(pos < n->cap << 6);
-    n->len            = n->len << 6 > pos ? n->len : (pos + 0x3f) >> 6;
+    n->len            = max(n->len, (pos + 0x3f) >> 6);
     n->ptr[pos >> 6] |= 1ull << (pos & 0x3f);
 }
 
