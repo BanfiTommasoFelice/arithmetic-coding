@@ -41,9 +41,9 @@ void bignum_set_bit(BigNum *n, u64 pos, u64 val) {
     assert(pos < n->cap << 6);
     n->len       = n->len << 6 > pos ? n->len : (pos + 0x3f) >> 6;
     u64 idx      = pos >> 6;
-    u64 a        = (val ? n->ptr[idx] : ~n->ptr[idx]);
-    a           |= 1ull << (pos & 0x3f);
-    n->ptr[idx]  = val ? a : ~a;
+    n->ptr[idx] ^= val - 1;
+    n->ptr[idx] |= 1ull << (pos & 0x3f);
+    n->ptr[idx] ^= val - 1;
 }
 
 u64 bignum_is_set_bit(BigNum n, u64 pos) {
