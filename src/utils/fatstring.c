@@ -43,10 +43,27 @@ String string_read(FILE *const stream) {
     return s;
 }
 
+String string_read_to_eof(FILE *const stream) {
+    i32    ch;
+    String s = string_new(64);
+    while (EOF != (ch = getc(stream))) string_push(&s, ch);
+    string_push(&s, '\0');
+    string_shrink(&s);
+    return s;
+}
+
 void string_rev(String *const s) {
     for (u64 i = 0; i < s->len - 2 - i; i++) {  // '\0' at the end
         char const tmp         = s->ptr[i];
         s->ptr[i]              = s->ptr[s->len - 2 - i];
         s->ptr[s->len - 2 - i] = tmp;
     }
+}
+
+u8Vec string_to_u8vec(String const s) {
+    return (u8Vec){
+        .cap = s.cap,
+        .len = s.len,
+        .ptr = (u8 *)s.ptr,
+    };
 }

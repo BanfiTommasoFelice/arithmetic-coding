@@ -1,24 +1,12 @@
 #include <assert.h>
-#include <string.h>
 
 #include "utils/arithmetic-coding.h"
+#include "utils/fatstring.h"
 #include "utils/type.h"
 #include "utils/vec.h"
 
 i32 main(void) {
-    char const m[] =
-        "Lovin' can hurt\n\
-Lovin' can hurt sometimes\n\
-But it's the only thing that I know\n\
-And when it gets hard\n\
-You know it can get hard sometimes\n\
-It is the only thing that makes us feel alive";
-
-    u32 const orig_len = strlen(m);
-
-    u8Vec     data     = u8vec_new(orig_len + 1);
-    for (u32 i = 0; i < orig_len; i++) u8vec_push(&data, m[i]);
-
+    u8Vec        data      = string_to_u8vec(string_read_to_eof(stdin));
     u32Vec const cum_distr = cum_distr_from_rnd_u8vec(data);
 
     u8vec_push(&data, '\0');
@@ -36,11 +24,11 @@ It is the only thing that makes us feel alive";
     u8vec_pop(&decoded);
 
     fflush(stdout);
-    assert(orig_len == decoded.len && "original data len and decoded len are different");
-    for (u32 i = 0; i < orig_len; i++)
-        assert(m[i] == decoded.ptr[i] && "original data and decoded data are different");
+    assert(data.len == decoded.len && "original data len and decoded len are different");
+    for (u32 i = 0; i < data.len; i++)
+        assert(data.ptr[i] == decoded.ptr[i] && "original data and decoded data are different");
 
-    fprintf(stdout, "Compression  : %f", (double)encoded.len / orig_len);
+    fprintf(stdout, "Compression  : %f", (double)encoded.len / data.len);
 
     u8vec_free(data);
     u32vec_free(cum_distr);
