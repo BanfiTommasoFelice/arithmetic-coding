@@ -6,15 +6,12 @@
 #include "type.h"
 #include "vec.h"
 
-#define INIT_CAP   4u
-#define D          256u  // don't change! 2^(2^x), x = 1,2,3,4 -> does not work for others
-#define D_BIT      __builtin_ctz(D)
-#define P          32u / D_BIT
-#define DtoP_1     (1u << (D_BIT * (P - 1)))  // D^(P-1)
-#define DtoP_2     (1u << (D_BIT * (P - 2)))  // D^(P-2)
-
-#define MSBP(x, y) (((u64)(x) * (y)) >> 32)  // most significant bits product
-#define _to_f32(x) ((f32)(x) / 0x100000000)
+#define INIT_CAP 4u
+#define D        256u  // don't change! 2^(2^x), x = 1,2,3,4 -> does not work for others
+#define D_BIT    __builtin_ctz(D)
+#define P        32u / D_BIT
+#define DtoP_1   (1u << (D_BIT * (P - 1)))  // D^(P-1)
+#define DtoP_2   (1u << (D_BIT * (P - 2)))  // D^(P-2)
 
 static_assert((1ULL << (D_BIT * P)) == 0x100000000, "we use u32 for operations!");
 
@@ -74,8 +71,8 @@ void partialmessage_push_unchecked(PartialMessage *m, u32 symbol) {
 
 u64 message_print_hex(FILE *stream, Message m) {
     u64 retval      = 0;
-    u32 upper_limit = (m.len + 7) >> 3;
-    for (u32 i = 0; i < upper_limit; i++) retval += fprintf(stream, "%2x", m.ptr[i]);
+    u32 upper_limit = m.len;
+    for (u32 i = 0; i < upper_limit; i++) retval += fprintf(stream, "%02x", m.ptr[i]);
     return retval;
 }
 
@@ -97,7 +94,7 @@ Message arithmetic_encoder(u8Vec input, u32Vec cum_distr) {
 }
 
 void interval_update(u8 symbol, u32Vec cum_distr, PartialMessage *output, u32 *base, u32 *len) {
-    u32 y  = MSBP(*len, cum_distr.ptr[(u32)symbol + 1]);  // symbold could be 0xff and OF -> u32
+    u32 y  = symbol == cum_distr.len - 1 ? *len : MSBP(*len, cum_distr.ptr[symbol + 1]);
     u32 a  = *base;
     u32 x  = MSBP(*len, cum_distr.ptr[symbol]);
     *base += x;
@@ -121,35 +118,36 @@ void encoder_renormalization(u32 *base, u32 *len, PartialMessage *output) {
 
 void code_value_selection(u32 *base, u32 *len, PartialMessage *output) {
     u32 a = *base;
-    *base = (*base + (DtoP_1 << 1));
-    *len  = DtoP_1 - 1;
+    *base = (*base + (DtoP_1 >> 1));
+    *len  = DtoP_2 - 1;
     if (a > *base) propagate_carry(output);
     encoder_renormalization(base, len, output);
 }
 
+u32   base = 0;  // @todo remove
 u8Vec arithmetic_decoder(Message *input_ptr, u32Vec cum_distr) {
     message_pad_with_zeroes(input_ptr, P);
     u32     len          = UINT32_MAX;
     u64     byte_decoded = P;
-    u32     value        = 0;
+    u32     val          = 0;
     Message input        = *input_ptr;
     u8Vec   output       = u8vec_new(input.byte_encoded);
-    for (u32 i = 0; i < P; i++) value += (u32)input.ptr[i] << ((P - i - 1) << 3);
+    for (u32 i = 0; i < P; i++) val += (u32)input.ptr[i] << ((P - i - 1) << 3);
     for (u32 k = 0; k < input.byte_encoded; k++) {
-        u8 symbol = interval_selection(&value, &len, &cum_distr);
+        u8 symbol = interval_selection(&val, &len, &cum_distr);
         u8vec_push(&output, symbol);
-        if (len < DtoP_1) decoder_renormalization(&value, &len, &byte_decoded, input);
+        if (len < DtoP_1) decoder_renormalization(&val, &len, &byte_decoded, input);
     }
     return output;
 }
 
-u8 interval_selection(u32 *value, u32 *len, u32Vec *cum_distr) {
+u8 interval_selection(u32 *val, u32 *len, u32Vec *cum_distr) {
     u32 lb_idx = 0, ub_idx = cum_distr->len;
     u32 lb_int = 0, ub_int = *len;
     while (ub_idx - lb_idx > 1) {
         u32 mid_idx = (lb_idx + ub_idx) >> 1;
         u32 mid_int = MSBP(*len, cum_distr->ptr[mid_idx]);
-        if (mid_int > *value) {
+        if (mid_int > *val) {
             ub_idx = mid_idx;
             ub_int = mid_int;
         } else {
@@ -157,22 +155,24 @@ u8 interval_selection(u32 *value, u32 *len, u32Vec *cum_distr) {
             lb_int = mid_int;
         }
     }
-    *value = *value - lb_int;
-    *len   = ub_int - lb_int;
+    base += lb_int;
+    *val  = *val - lb_int;
+    *len  = ub_int - lb_int;
     return lb_idx;
 }
 
-void decoder_renormalization(u32 *value, u32 *len, u64 *byte_decoded, Message input) {
+void decoder_renormalization(u32 *val, u32 *len, u64 *byte_decoded, Message input) {
     while (*len < DtoP_1) {
-        *value = (*value << D_BIT) + input.ptr[*byte_decoded++];
+        *val = (*val << D_BIT) + input.ptr[(*byte_decoded)++];
         *len   = (*len << D_BIT);
+        base <<= D_BIT;
     }
 }
 
 u32Vec cum_distr_from_rnd_u8vec(u8Vec data) {
     // the minimum probability usable is D^(1-P) -> normalized to u32 is D
     assert(data.len <= UINT32_MAX && "not supported yet");
-    u32Vec distr = u32vec_new_init((sizeof(*data.ptr) << 8) + 1, 0);
+    u32Vec distr = u32vec_new_init((sizeof(*data.ptr) << 8), 0);
     distr.len    = distr.cap;
     for (u32 i = 0; i < data.len; i++) distr.ptr[data.ptr[i]]++;
     u64 tot   = 0;
@@ -184,8 +184,6 @@ u32Vec cum_distr_from_rnd_u8vec(u8Vec data) {
         tot          += distr.ptr[i];
         distr.ptr[i]  = val;
     }
-    distr.ptr[distr.len - 1] = UINT32_MAX;
-    if (check)
-        assert(distr.ptr[distr.len - 1] - distr.ptr[distr.len - 2] >= D && "probability too low");
+    if (check) assert(0x100000000 - distr.ptr[distr.len - 1] >= D && "probability too low");
     return distr;
 }

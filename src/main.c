@@ -6,7 +6,8 @@
 #include "utils/vec.h"
 
 i32 main(void) {
-    char  m[]      = "210013";
+    char  m[]      = "abdjfdakfjaskdlfuweuifuasdiofjaskdfjweklaj;ejafl;klejflakwe";
+
     u32   orig_len = strlen(m);
 
     u8Vec data     = u8vec_new(orig_len + 1);
@@ -15,17 +16,17 @@ i32 main(void) {
     u32Vec cum_distr = cum_distr_from_rnd_u8vec(data);
 
     u8vec_push(&data, '\0');
-    fprintf(stdout, "Data   : %s\n", data.ptr);
+    fprintf(stdout, "Data(char)   : `%s`\n", data.ptr);
     u8vec_pop(&data);
 
     Message encoded = arithmetic_encoder(data, cum_distr);
-    fprintf(stdout, "Encoded: ");
+    fprintf(stdout, "Encoded(char): `");
     message_print_hex(stdout, encoded);
-    fprintf(stdout, "\n");
+    fprintf(stdout, "`\n");
 
     u8Vec decoded = arithmetic_decoder(&encoded, cum_distr);
     u8vec_push(&decoded, '\0');
-    fprintf(stdout, "Data   : %s\n", decoded.ptr);
+    fprintf(stdout, "Decoded(hex) : `%s`\n", decoded.ptr);
     u8vec_pop(&decoded);
 
     fflush(stdout);
