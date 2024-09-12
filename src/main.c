@@ -40,6 +40,8 @@ It is the only thing that makes us feel alive";
     for (u32 i = 0; i < orig_len; i++)
         assert(m[i] == decoded.ptr[i] && "original data and decoded data are different");
 
+    fprintf(stdout, "Compression  : %f", (double)encoded.len / orig_len);
+
     u8vec_free(data);
     u32vec_free(cum_distr);
     message_free(encoded);
