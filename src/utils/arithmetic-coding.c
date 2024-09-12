@@ -124,7 +124,6 @@ void code_value_selection(u32 *base, u32 *len, PartialMessage *output) {
     encoder_renormalization(base, len, output);
 }
 
-u32   base = 0;  // @todo remove
 u8Vec arithmetic_decoder(Message *input_ptr, u32Vec cum_distr) {
     message_pad_with_zeroes(input_ptr, P);
     u32     len          = UINT32_MAX;
@@ -155,7 +154,6 @@ u8 interval_selection(u32 *val, u32 *len, u32Vec *cum_distr) {
             lb_int = mid_int;
         }
     }
-    base += lb_int;
     *val  = *val - lb_int;
     *len  = ub_int - lb_int;
     return lb_idx;
@@ -163,9 +161,8 @@ u8 interval_selection(u32 *val, u32 *len, u32Vec *cum_distr) {
 
 void decoder_renormalization(u32 *val, u32 *len, u64 *byte_decoded, Message input) {
     while (*len < DtoP_1) {
-        *val = (*val << D_BIT) + input.ptr[(*byte_decoded)++];
+        *val   = (*val << D_BIT) + input.ptr[(*byte_decoded)++];
         *len   = (*len << D_BIT);
-        base <<= D_BIT;
     }
 }
 

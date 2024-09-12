@@ -6,7 +6,13 @@
 #include "utils/vec.h"
 
 i32 main(void) {
-    char  m[]      = "abdjfdakfjaskdlfuweuifuasdiofjaskdfjweklaj;ejafl;klejflakwe";
+    char m[] =
+        "Lovin' can hurt\n\
+Lovin' can hurt sometimes\n\
+But it's the only thing that I know\n\
+And when it gets hard\n\
+You know it can get hard sometimes\n\
+It is the only thing that makes us feel alive\n";
 
     u32   orig_len = strlen(m);
 
