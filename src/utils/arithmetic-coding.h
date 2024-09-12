@@ -12,7 +12,7 @@ typedef struct _Message {
 
 void    message_free(Message const m);
 
-u64     message_print_hex(FILE *stream, Message const m);
+u64     message_print_hex(FILE *const stream, Message const m);
 
 Message arithmetic_encoder(u8Vec const input, u32Vec const cum_distr);
 

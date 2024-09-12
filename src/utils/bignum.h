@@ -20,14 +20,14 @@ void           bignum_set_bit(BigNum *const n, u64 const pos);
 void           bignum_unset_bit(BigNum *const n, u64 const pos);
 u64            bignum_is_set_bit(BigNum const n, u64 const pos);
 
-BigNum         bignum_read(FILE *stream);
-BigNum         bignum_read_hex(FILE *stream);
+BigNum         bignum_read(FILE *const stream);
+BigNum         bignum_read_hex(FILE *const stream);
 
 String         bignum_to_string(BigNum const n);
 String         bignum_to_string_hex(BigNum const n, u32 const space);
-void           bignum_print(FILE *stream, BigNum const n);
-void           bignum_print_hex(FILE *stream, BigNum const n, u32 const space);
-void           bignum_print_base(FILE *stream, BigNum const n, u64 const b);
+void           bignum_print(FILE *const stream, BigNum const n);
+void           bignum_print_hex(FILE *const stream, BigNum const n, u32 const space);
+void           bignum_print_base(FILE *const stream, BigNum const n, u64 const b);
 
 u64            bignum_div_eq_u64(BigNum *const n, u64 const d);
 u64Vec         bignum_to_base(BigNum const n, u64 const b);

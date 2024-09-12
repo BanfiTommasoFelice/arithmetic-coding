@@ -95,7 +95,7 @@ static void partialmessage_push_unchecked(PartialMessage *const m, u32 const sym
     m->ptr[m->len++] = symbol;
 }
 
-u64 message_print_hex(FILE *stream, Message const m) {
+u64 message_print_hex(FILE *const stream, Message const m) {
     u64 retval      = 0;
     u32 upper_limit = m.len;
     for (u32 i = 0; i < upper_limit; i++) retval += fprintf(stream, "%02x", m.ptr[i]);

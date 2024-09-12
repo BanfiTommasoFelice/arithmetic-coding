@@ -62,7 +62,7 @@
         v->len++;                                                         \
     }                                                                     \
                                                                           \
-    _type_ _type_##vec_pop(_type_##Vec *const v) {                        \
+    _type_ _type_##vec_pop(_type_##Vec *v) {                              \
         return v->ptr[--v->len];                                          \
     }                                                                     \
                                                                           \

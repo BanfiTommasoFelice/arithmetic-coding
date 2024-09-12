@@ -62,7 +62,7 @@ u64 bignum_is_set_bit(BigNum const n, u64 const pos) {
     return !!(n.ptr[pos >> 6] & 1ull << (pos & 0x3f));
 }
 
-BigNum bignum_read(FILE *stream) {
+BigNum bignum_read(FILE *const stream) {
     String s = string_read(stream);
     for (u64 i = 0; i < s.len - 1; i++)
         assert(s.ptr[i] >= '0' && s.ptr[i] <= '9' && "not a decimal digit");
@@ -82,7 +82,7 @@ BigNum bignum_read(FILE *stream) {
     return n;
 }
 
-BigNum bignum_read_hex(FILE *stream) {
+BigNum bignum_read_hex(FILE *const stream) {
     String s = string_read(stream);
     for (u64 i = 0; i < s.len - 1; i++)
         assert(((s.ptr[i] >= '0' && s.ptr[i] <= '9') || (s.ptr[i] >= 'a' && s.ptr[i] <= 'f')) &&
@@ -130,19 +130,19 @@ String bignum_to_string_hex(BigNum const n, u32 const space) {
     return s;
 }
 
-void bignum_print(FILE *stream, BigNum const n) {
+void bignum_print(FILE *const stream, BigNum const n) {
     String const s = bignum_to_string(n);
     fprintf(stream, "%s", s.ptr);
     string_free(s);
 }
 
-void bignum_print_hex(FILE *stream, BigNum const n, u32 const dbg) {
+void bignum_print_hex(FILE *const stream, BigNum const n, u32 const dbg) {
     String const s = bignum_to_string_hex(n, dbg);
     fprintf(stream, "%s", s.ptr);
     string_free(s);
 }
 
-void bignum_print_base(FILE *stream, BigNum const n, u64 const b) {
+void bignum_print_base(FILE *const stream, BigNum const n, u64 const b) {
     u64Vec const v = bignum_to_base(n, b);
     u64vec_print_rev(stream, v, "%lu");
     u64vec_free(v);

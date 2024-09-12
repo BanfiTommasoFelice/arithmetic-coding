@@ -34,10 +34,10 @@ void string_shrink(String *const s) {
     assert(s->ptr && "realloc failed");
 }
 
-String string_read(FILE *stream) {
+String string_read(FILE *const stream) {
     i32    ch;
     String s = string_new(64);
-    while (EOF != (ch = getc_unlocked(stream)) && !isspace(ch)) string_push(&s, ch);
+    while (EOF != (ch = getc(stream)) && !isspace(ch)) string_push(&s, ch);
     string_push(&s, '\0');
     string_shrink(&s);
     return s;
