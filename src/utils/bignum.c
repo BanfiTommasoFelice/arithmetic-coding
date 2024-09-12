@@ -38,7 +38,7 @@ void bignum_free(BigNum n) {
 }
 
 void bignum_force_bit(BigNum *n, u64 pos, u8 val) {
-    assert(pos < n->cap << 6);
+    assert(pos < n->cap << 6 && "pos > cap");
     n->len       = max(n->len, (pos + 0x3f) >> 6);
     u64 idx      = pos >> 6;
     n->ptr[idx] ^= val - 1;
@@ -47,24 +47,25 @@ void bignum_force_bit(BigNum *n, u64 pos, u8 val) {
 }
 
 void bignum_set_bit(BigNum *n, u64 pos) {
-    assert(pos < n->cap << 6);
+    assert(pos < n->cap << 6 && "pos > cap");
     n->len            = max(n->len, (pos + 0x3f) >> 6);
     n->ptr[pos >> 6] |= 1ull << (pos & 0x3f);
 }
 
 void bignum_unset_bit(BigNum *n, u64 pos) {
-    assert(pos < n->len << 6);
+    assert(pos < n->len << 6 && "pos > cap");
     n->ptr[pos >> 6] &= ~(1ull << (pos & 0x3f));
 }
 
 u64 bignum_is_set_bit(BigNum n, u64 pos) {
-    assert(pos < n.len << 6);
+    assert(pos < n.len << 6 && "pos > cap");
     return !!(n.ptr[pos >> 6] & 1ull << (pos & 0x3f));
 }
 
 BigNum bignum_read(FILE *stream) {
     String s = string_read(stream);
-    for (u64 i = 0; i < s.len - 1; i++) assert(s.ptr[i] >= '0' && s.ptr[i] <= '9');
+    for (u64 i = 0; i < s.len - 1; i++)
+        assert(s.ptr[i] >= '0' && s.ptr[i] <= '9' && "not a decimal digit");
     BigNum n         = bignum_new(((s.len << 2) + 63) >> 6);  // 4 > log2(10)
     u64    left_most = 0, pos = 0;
     while (left_most <= s.len - 2) {
@@ -84,7 +85,8 @@ BigNum bignum_read(FILE *stream) {
 BigNum bignum_read_hex(FILE *stream) {
     String s = string_read(stream);
     for (u64 i = 0; i < s.len - 1; i++)
-        assert((s.ptr[i] >= '0' && s.ptr[i] <= '9') || (s.ptr[i] >= 'a' && s.ptr[i] <= 'f'));
+        assert(((s.ptr[i] >= '0' && s.ptr[i] <= '9') || (s.ptr[i] >= 'a' && s.ptr[i] <= 'f')) &&
+               "not a hexadeciaml digit");
     BigNum n = bignum_new((s.len + 15) >> 4);
     n.len    = n.cap;
     for (u64 i = 0; i < n.len - 1; i++) {
@@ -160,7 +162,7 @@ u64 bignum_div_eq_u64(BigNum *c, u64 d) {
         carry          = new_carry - tmp * d;
     }
     c->len -= c->ptr[c->len - 1] == 0;
-    assert(!c->len || c->ptr[c->len - 1] != 0);
+    assert((!c->len || !c->ptr[c->len - 1]) && "division algorithm is wrong");
     return carry;
 }
 

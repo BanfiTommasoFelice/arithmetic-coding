@@ -1,8 +1,5 @@
 #pragma once
 
-#include <assert.h>
-#include <stdio.h>
-
 #include "type.h"
 
 u32      u32_mod_inv_odd(u32 b);

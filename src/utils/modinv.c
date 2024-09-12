@@ -3,7 +3,7 @@
 #include <assert.h>
 
 u32 u32_mod_inv_odd(u32 b) {
-    assert(b & 1);
+    assert(b & 1 && "b is even: 2^32 and b are not coprime");
     u32_pair tmp;
     u32      y = 0, y1 = 1, q, a;
 
@@ -24,14 +24,14 @@ u32 u32_mod_inv_odd(u32 b) {
         a   = tmp.first;
         b   = tmp.second;
     }
-    assert(a == 1);  // if b was odd, then gcd(b, 2**32) = 1
+    assert(a == 1 && "gcd(b, 2^32) should be 1");
     return y;
 }
 
 // .first  = modular inverse of the odd
 // .second = exp
 u32_pair u32_mod_inv(u32 b) {
-    assert(b);
+    assert(b && "modular inverse of 0 does not exist");
     u32 exp = __builtin_ctz(b);
     return (u32_pair){
         .first  = u32_mod_inv_odd(b >> exp),
@@ -40,7 +40,7 @@ u32_pair u32_mod_inv(u32 b) {
 }
 
 u64 u64_mod_inv_odd(u64 b) {
-    assert(b & 1);
+    assert(b & 1 && "b is even: 2^32 and b are not coprime");
     u64_pair tmp;
     u64      y = 0, y1 = 1, q, a;
 
@@ -61,14 +61,14 @@ u64 u64_mod_inv_odd(u64 b) {
         a   = tmp.first;
         b   = tmp.second;
     }
-    assert(a == 1);  // if b was odd, then gcd(b, 2**64) = 1
+    assert(a == 1 && "gcd(b, 2^64) should be 1");
     return y;
 }
 
 // .first  = modular inverse of the odd
 // .second = exp
 u64_pair u64_mod_inv(u64 b) {
-    assert(b);
+    assert(b && "modular inverse of 0 does not exist");
     u64 exp = __builtin_ctzl(b);
     return (u64_pair){
         .first  = u64_mod_inv_odd(b >> exp),

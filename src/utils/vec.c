@@ -9,13 +9,13 @@
 #define _IMPLEMENT_VEC(_type_)                                                        \
                                                                                       \
     _type_##Vec _type_##vec_new(u64 cap) {                                            \
-        assert(cap);                                                                  \
+        assert(cap && "cap should be != 0");                                          \
         _type_##Vec v = {                                                             \
             .cap = cap,                                                               \
             .len = 0,                                                                 \
             .ptr = malloc(v.cap * sizeof(*v.ptr)),                                    \
         };                                                                            \
-        assert(v.ptr);                                                                \
+        assert(v.ptr && "malloc failed");                                             \
         return v;                                                                     \
     }                                                                                 \
                                                                                       \
@@ -31,7 +31,7 @@
             .len = v.len,                                                             \
             .ptr = malloc(v.cap * sizeof(*v.ptr)),                                    \
         };                                                                            \
-        assert(w.ptr);                                                                \
+        assert(w.ptr && "malloc failed");                                             \
         memcpy(w.ptr, v.ptr, w.cap * sizeof(*v.ptr));                                 \
         return w;                                                                     \
     }                                                                                 \
@@ -39,9 +39,9 @@
     void _type_##vec_shrink(_type_##Vec *v) {                                         \
         if (v->len < v->cap) {                                                        \
             v->ptr = realloc(v->ptr, v->len * sizeof(*v->ptr));                       \
-            assert(v->ptr);                                                           \
+            assert(v->ptr && "realloc failed");                                       \
             v->cap = v->len;                                                          \
-        } else assert(v->len == v->cap);                                              \
+        } else assert(v->len == v->cap && "len > cap");                               \
     }                                                                                 \
                                                                                       \
     void _type_##vec_resize(_type_##Vec *v, u64 cap) {                                \
@@ -49,7 +49,7 @@
         v->len = min(v->len, cap);                                                    \
         v->cap = cap;                                                                 \
         v->ptr = realloc(v->ptr, cap * sizeof(*v->ptr));                              \
-        assert(v->ptr);                                                               \
+        assert(v->ptr && "realloc failed");                                           \
     }                                                                                 \
                                                                                       \
     void _type_##vec_double(_type_##Vec *v) {                                         \
@@ -60,6 +60,10 @@
         if (v->len == v->cap) _type_##vec_double(v);                                  \
         v->ptr[v->len] = digit;                                                       \
         v->len++;                                                                     \
+    }                                                                                 \
+                                                                                      \
+    _type_ _type_##vec_pop(_type_##Vec *v) {                                          \
+        return v->ptr[--v->len];                                                      \
     }                                                                                 \
                                                                                       \
     void _type_##vec_free(_type_##Vec v) {                                            \
