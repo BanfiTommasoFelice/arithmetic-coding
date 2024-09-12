@@ -97,7 +97,7 @@ Message arithmetic_encoder(u8Vec input, u32Vec cum_distr) {
 }
 
 void interval_update(u8 symbol, u32Vec cum_distr, PartialMessage *output, u32 *base, u32 *len) {
-    u32 y  = symbol == cum_distr.len - 1 ? *len : MSBP(*len, cum_distr.ptr[symbol + 1]);
+    u32 y  = MSBP(*len, cum_distr.ptr[(u32)symbol + 1]);  // symbold could be 0xff and OF -> u32
     u32 a  = *base;
     u32 x  = MSBP(*len, cum_distr.ptr[symbol]);
     *base += x;
@@ -167,4 +167,25 @@ void decoder_renormalization(u32 *value, u32 *len, u64 *byte_decoded, Message in
         *value = (*value << D_BIT) + input.ptr[*byte_decoded++];
         *len   = (*len << D_BIT);
     }
+}
+
+u32Vec cum_distr_from_rnd_u8vec(u8Vec data) {
+    // the minimum probability usable is D^(1-P) -> normalized to u32 is D
+    assert(data.len <= UINT32_MAX && "not supported yet");
+    u32Vec distr = u32vec_new_init((sizeof(*data.ptr) << 8) + 1, 0);
+    distr.len    = distr.cap;
+    for (u32 i = 0; i < data.len; i++) distr.ptr[data.ptr[i]]++;
+    u64 tot   = 0;
+    u8  check = 0;
+    for (u32 i = 0; i < distr.len; i++) {
+        u32 val = tot * UINT32_MAX / data.len;
+        if (check) assert(val - distr.ptr[i - 1] >= D && "probability too low");
+        check         = !!distr.ptr[i];
+        tot          += distr.ptr[i];
+        distr.ptr[i]  = val;
+    }
+    distr.ptr[distr.len - 1] = UINT32_MAX;
+    if (check)
+        assert(distr.ptr[distr.len - 1] - distr.ptr[distr.len - 2] >= D && "probability too low");
+    return distr;
 }

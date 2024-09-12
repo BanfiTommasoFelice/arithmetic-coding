@@ -37,3 +37,5 @@ void  code_value_selection(u32 *base, u32 *len, PartialMessage *output);
 u8Vec arithmetic_decoder(Message *input, u32Vec cum_distr);
 u8    interval_selection(u32 *value, u32 *len, u32Vec *cum_distr);
 void  decoder_renormalization(u32 *value, u32 *len, u64 *byte_decoded, Message input);
+
+u32Vec         cum_distr_from_rnd_u8vec(u8Vec v);
