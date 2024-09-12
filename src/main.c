@@ -12,7 +12,7 @@ Lovin' can hurt sometimes\n\
 But it's the only thing that I know\n\
 And when it gets hard\n\
 You know it can get hard sometimes\n\
-It is the only thing that makes us feel alive\n";
+It is the only thing that makes us feel alive";
 
     u32 const orig_len = strlen(m);
 

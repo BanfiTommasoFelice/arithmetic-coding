@@ -66,7 +66,6 @@ void message_free(Message const m) {
     free(m.ptr);
 }
 
-// @todo compilte-time abstraction: functions are identical
 static void partialmessage_resize(PartialMessage *const m, u64 const cap) {
     if (m->cap == cap) return;
     m->len = min(m->len, cap);
