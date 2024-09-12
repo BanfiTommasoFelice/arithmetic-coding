@@ -29,7 +29,8 @@ static void           partialmessage_resize(PartialMessage *const m, u64 const c
 static void           message_resize(Message *const m, u64 const cap);
 static void           partialmessage_push(PartialMessage *const m, u32 const symbol);
 static void           partialmessage_push_unchecked(PartialMessage *const m, u32 const symbol);
-static void           message_pad_with_zeroes(Message *const input, u32 const n);
+
+__attribute__((unused)) static void message_pad_with_zeroes(Message *const input, u32 const n);
 
 static void interval_update(u8 const symbol, u32Vec const cum_distr, PartialMessage *const output,
                             u32 *const base, u32 *const len);
@@ -151,7 +152,6 @@ static void code_value_selection(u32 *const base, u32 *const len, PartialMessage
 }
 
 u8Vec arithmetic_decoder(Message *const input_ptr, u32Vec const cum_distr) {
-    message_pad_with_zeroes(input_ptr, P);
     u32           len          = UINT32_MAX;
     u64           byte_decoded = P;
     u32           val          = 0;
@@ -188,6 +188,8 @@ static u8 interval_selection(u32 *const val, u32 *const len, u32Vec const cum_di
 static void decoder_renormalization(u32 *const val, u32 *const len, u64 *const byte_decoded,
                                     Message const input) {
     while (*len < DtoP_1) {
+        // if heap-buffer-flow, then check `message_pad_with_zeroes()`: call this as the first line
+        // in `arithmetic_decoder()`
         *val = (*val << D_BIT) + input.ptr[(*byte_decoded)++];
         *len = (*len << D_BIT);
     }
@@ -218,8 +220,8 @@ u32Vec cum_distr_from_rnd_u8vec_unsafe(u8Vec const data) {
     // the minimum probability usable is D^(1-P) -> normalized to u32 is D
     assert(data.len <= UINT32_MAX && "not supported yet");
     const u32 distr_len = sizeof(*data.ptr) << 8;
-    u32Vec distr = u32vec_new_init(distr_len, 0);
-    distr.len    = distr.cap;
+    u32Vec    distr     = u32vec_new_init(distr_len, 0);
+    distr.len           = distr.cap;
     for (u32 i = 0; i < data.len; i++) distr.ptr[data.ptr[i]]++;
     u64 tot   = 0;
     u8  check = 0;
