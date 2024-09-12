@@ -7,7 +7,7 @@
 
 #include "type.h"
 
-String string_new(u64 cap) {
+String string_new(u64 const cap) {
     String s;
     s.cap = cap;
     s.ptr = malloc(sizeof(*s.ptr) * cap);
@@ -16,11 +16,11 @@ String string_new(u64 cap) {
     return s;
 }
 
-void string_free(String s) {
+void string_free(String const s) {
     free(s.ptr);
 }
 
-void string_push(String *s, char ch) {
+void string_push(String *const s, char const ch) {
     if (s->len == s->cap) {
         s->ptr = realloc(s->ptr, sizeof(*s->ptr) * (s->cap *= 2));
         assert(s->ptr && "realloc failed");
@@ -28,24 +28,24 @@ void string_push(String *s, char ch) {
     s->ptr[s->len++] = ch;
 }
 
-void string_shrink(String *s) {
+void string_shrink(String *const s) {
     s->cap = s->len;
     s->ptr = realloc(s->ptr, sizeof(*s->ptr) * s->cap);
     assert(s->ptr && "realloc failed");
 }
 
 String string_read(FILE *stream) {
-    int    ch;
+    i32    ch;
     String s = string_new(64);
-    while (EOF != (ch = getc(stream)) && !isspace(ch)) string_push(&s, ch);
+    while (EOF != (ch = getc_unlocked(stream)) && !isspace(ch)) string_push(&s, ch);
     string_push(&s, '\0');
     string_shrink(&s);
     return s;
 }
 
-void string_rev(String *s) {
+void string_rev(String *const s) {
     for (u64 i = 0; i < s->len - 2 - i; i++) {  // '\0' at the end
-        char tmp               = s->ptr[i];
+        char const tmp         = s->ptr[i];
         s->ptr[i]              = s->ptr[s->len - 2 - i];
         s->ptr[s->len - 2 - i] = tmp;
     }

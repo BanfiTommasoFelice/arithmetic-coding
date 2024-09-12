@@ -11,9 +11,9 @@ typedef struct _string {
     char *ptr;
 } String;
 
-String string_new(uint64_t cap);
-void   string_free(String s);
-void   string_push(String *s, char ch);
-void   string_shrink(String *s);
-String string_read(FILE *stream);
-void   string_rev(String *s);
+String string_new(uint64_t const cap);
+void   string_free(String const s);
+void   string_push(String *const s, char const ch);
+void   string_shrink(String *const s);
+String string_read(FILE *const stream);
+void   string_rev(String *const s);

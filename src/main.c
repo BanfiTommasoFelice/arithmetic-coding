@@ -6,7 +6,7 @@
 #include "utils/vec.h"
 
 i32 main(void) {
-    char m[] =
+    char const m[] =
         "Lovin' can hurt\n\
 Lovin' can hurt sometimes\n\
 But it's the only thing that I know\n\
@@ -14,12 +14,12 @@ And when it gets hard\n\
 You know it can get hard sometimes\n\
 It is the only thing that makes us feel alive\n";
 
-    u32   orig_len = strlen(m);
+    u32 const orig_len = strlen(m);
 
-    u8Vec data     = u8vec_new(orig_len + 1);
+    u8Vec     data     = u8vec_new(orig_len + 1);
     for (u32 i = 0; i < orig_len; i++) u8vec_push(&data, m[i]);
 
-    u32Vec cum_distr = cum_distr_from_rnd_u8vec(data);
+    u32Vec const cum_distr = cum_distr_from_rnd_u8vec(data);
 
     u8vec_push(&data, '\0');
     fprintf(stdout, "Data(char)   : `%s`\n", data.ptr);

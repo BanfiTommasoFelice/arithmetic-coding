@@ -5,59 +5,59 @@
 
 #include "vec.h"
 
-BigNum bignum_new(u64 cap) {
+BigNum bignum_new(u64 const cap) {
     return u64vec_new_init(cap, 0);
 }
 
-BigNum bignum_clone(BigNum n) {
+BigNum bignum_clone(BigNum const n) {
     return u64vec_clone(n);
 }
 
-void bignum_shrink(BigNum *n) {
+void bignum_shrink(BigNum *const n) {
     return u64vec_shrink(n);
 }
 
-void bignum_resize(BigNum *n, u64 cap) {
+void bignum_resize(BigNum *const n, u64 const cap) {
     return u64vec_resize(n, cap);
 }
 
-void bignum_clean(BigNum *c) {
-    for (u64 i = c->len - 1;; i--) {
-        if (c->ptr[i] != 0) {
-            c->len = i + 1;
+void bignum_clean(BigNum *const n) {
+    for (u64 i = n->len - 1;; i--) {
+        if (n->ptr[i] != 0) {
+            n->len = i + 1;
             break;
         } else if (i == 0) {
-            c->len = 0;
+            n->len = 0;
             break;
         }
     }
 }
 
-void bignum_free(BigNum n) {
+void bignum_free(BigNum const n) {
     return u64vec_free(n);
 }
 
-void bignum_force_bit(BigNum *n, u64 pos, u8 val) {
+void bignum_force_bit(BigNum *const n, u64 const pos, u8 const val) {
     assert(pos < n->cap << 6 && "pos > cap");
-    n->len       = max(n->len, (pos + 0x3f) >> 6);
-    u64 idx      = pos >> 6;
-    n->ptr[idx] ^= val - 1;
-    n->ptr[idx] |= 1ull << (pos & 0x3f);
-    n->ptr[idx] ^= val - 1;
+    n->len         = max(n->len, (pos + 0x3f) >> 6);
+    u64 const idx  = pos >> 6;
+    n->ptr[idx]   ^= val - 1;
+    n->ptr[idx]   |= 1ull << (pos & 0x3f);
+    n->ptr[idx]   ^= val - 1;
 }
 
-void bignum_set_bit(BigNum *n, u64 pos) {
+void bignum_set_bit(BigNum *const n, u64 const pos) {
     assert(pos < n->cap << 6 && "pos > cap");
     n->len            = max(n->len, (pos + 0x3f) >> 6);
     n->ptr[pos >> 6] |= 1ull << (pos & 0x3f);
 }
 
-void bignum_unset_bit(BigNum *n, u64 pos) {
+void bignum_unset_bit(BigNum *const n, u64 const pos) {
     assert(pos < n->len << 6 && "pos > cap");
     n->ptr[pos >> 6] &= ~(1ull << (pos & 0x3f));
 }
 
-u64 bignum_is_set_bit(BigNum n, u64 pos) {
+u64 bignum_is_set_bit(BigNum const n, u64 const pos) {
     assert(pos < n.len << 6 && "pos > cap");
     return !!(n.ptr[pos >> 6] & 1ull << (pos & 0x3f));
 }
@@ -98,16 +98,17 @@ BigNum bignum_read_hex(FILE *stream) {
     return n;
 }
 
-String bignum_to_string(BigNum n) {
-    u64 b    = 10;
-    n        = bignum_clone(n);
-    u64 cap  = (n.len << 6) / (64 - __builtin_clzl(b - 1));  // log2(n) / log2(base) == log_base(n)
+String bignum_to_string(BigNum const n) {
+    u64 const b = 10;
+    BigNum    m = bignum_clone(n);
+    u64 const cap =
+        (m.len << 6) / (64 - __builtin_clzl(b - 1));  // log2(n) / log2(base) == log_base(n)
     String s = string_new(cap);
-    while (n.len) {
-        u64 carry = bignum_div_eq_u64(&n, b);
+    while (m.len) {
+        u64 carry = bignum_div_eq_u64(&m, b);
         string_push(&s, carry + '0');
     }
-    bignum_free(n);
+    bignum_free(m);
     if (s.len == 0) string_push(&s, '0');
     string_push(&s, '\0');
     string_shrink(&s);
@@ -115,7 +116,7 @@ String bignum_to_string(BigNum n) {
     return s;
 }
 
-String bignum_to_string_hex(BigNum n, u32 space) {
+String bignum_to_string_hex(BigNum const n, u32 const space) {
     String s;
     if (!n.len) {
         s = string_new(2);
@@ -129,51 +130,52 @@ String bignum_to_string_hex(BigNum n, u32 space) {
     return s;
 }
 
-void bignum_print(FILE *stream, BigNum x) {
-    String s = bignum_to_string(x);
+void bignum_print(FILE *stream, BigNum const n) {
+    String const s = bignum_to_string(n);
     fprintf(stream, "%s", s.ptr);
     string_free(s);
 }
 
-void bignum_print_hex(FILE *stream, BigNum x, u32 dbg) {
-    String s = bignum_to_string_hex(x, dbg);
+void bignum_print_hex(FILE *stream, BigNum const n, u32 const dbg) {
+    String const s = bignum_to_string_hex(n, dbg);
     fprintf(stream, "%s", s.ptr);
     string_free(s);
 }
 
-void bignum_print_base(FILE *stream, BigNum x, u64 b) {
-    u64Vec v = bignum_to_base(x, b);
+void bignum_print_base(FILE *stream, BigNum const n, u64 const b) {
+    u64Vec const v = bignum_to_base(n, b);
     u64vec_print_rev(stream, v, "%lu");
     u64vec_free(v);
 }
 
-u64 bignum_div_eq_u64(BigNum *c, u64 d) {
-    if (!c->len || d == 1) return 0;
-    u64 quo   = UINT64_MAX / d + (UINT64_MAX % d == d - 1);
-    u64 car   = 0 - quo * d;
-    u64 carry = 0;
-    for (u32 i = c->len - 1; i != UINT32_MAX; i--) {
-        u64 n          = c->ptr[i] / d;
-        u64 new_carry  = c->ptr[i] - n * d;
-        n             += quo * carry;
+u64 bignum_div_eq_u64(BigNum *const n, u64 const d) {
+    if (!n->len || d == 1) return 0;
+    u64 const quo   = UINT64_MAX / d + (UINT64_MAX % d == d - 1);
+    u64 const car   = 0 - quo * d;
+    u64       carry = 0;
+    for (u32 i = n->len - 1; i != UINT32_MAX; i--) {
+        u64 m          = n->ptr[i] / d;
+        u64 new_carry  = n->ptr[i] - m * d;
+        m             += quo * carry;
         new_carry     += car * carry;
         u64 tmp        = new_carry / d;
-        c->ptr[i]      = n + tmp;
+        n->ptr[i]      = m + tmp;
         carry          = new_carry - tmp * d;
     }
-    c->len -= c->ptr[c->len - 1] == 0;
-    assert((!c->len || !c->ptr[c->len - 1]) && "division algorithm is wrong");
+    n->len -= n->ptr[n->len - 1] == 0;
+    assert((!n->len || !n->ptr[n->len - 1]) && "division algorithm is wrong");
     return carry;
 }
 
-u64Vec bignum_to_base(BigNum n, u64 b) {
-    n        = bignum_clone(n);
-    u64 cap  = (n.len << 6) / (64 - __builtin_clzl(b - 1));  // log2(n) / log2(base) == log_base(n)
+u64Vec bignum_to_base(BigNum const n, u64 const b) {
+    BigNum    m = bignum_clone(n);
+    u64 const cap =
+        (m.len << 6) / (64 - __builtin_clzl(b - 1));  // log_2(n) / log_2(base) == log_base(n)
     u64Vec v = u64vec_new(cap);
-    while (n.len) {
-        u64 carry = bignum_div_eq_u64(&n, b);
+    while (m.len) {
+        u64 carry = bignum_div_eq_u64(&m, b);
         u64vec_push(&v, carry);
     }
-    bignum_free(n);
+    bignum_free(m);
     return v;
 }
