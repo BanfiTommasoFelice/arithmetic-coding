@@ -2,7 +2,10 @@
 
 #include <assert.h>
 
-u32 u32_mod_inv_odd(u32 b) {
+static u32 u32_mod_inv_odd(u32 b);
+static u64 u64_mod_inv_odd(u64 b);
+
+static u32 u32_mod_inv_odd(u32 b) {
     assert(b & 1 && "b is even: 2^32 and b are not coprime");
     u32_pair tmp;
     u32      y = 0, y1 = 1, q, a;
@@ -39,7 +42,7 @@ u32_pair u32_mod_inv(u32 b) {
     };
 }
 
-u64 u64_mod_inv_odd(u64 b) {
+static u64 u64_mod_inv_odd(u64 b) {
     assert(b & 1 && "b is even: 2^32 and b are not coprime");
     u64_pair tmp;
     u64      y = 0, y1 = 1, q, a;

@@ -6,16 +6,42 @@
 #include "type.h"
 #include "vec.h"
 
-#define INIT_CAP 4u
-#define D        256u  // don't change! 2^(2^x), x = 1,2,3,4 -> does not work for others
-#define D_BIT    __builtin_ctz(D)
-#define P        32u / D_BIT
-#define DtoP_1   (1u << (D_BIT * (P - 1)))  // D^(P-1)
-#define DtoP_2   (1u << (D_BIT * (P - 2)))  // D^(P-2)
+typedef struct _PartialMessage {
+    u64 cap, len, outstanding;
+    u8 *ptr;
+} PartialMessage;
+
+#define INIT_CAP   4u
+#define D          256u  // don't change! 2^(2^x), x = 1,2,3,4 -> does not work for others
+#define D_BIT      __builtin_ctz(D)
+#define P          32u / D_BIT
+#define DtoP_1     (1u << (D_BIT * (P - 1)))  // D^(P-1)
+#define DtoP_2     (1u << (D_BIT * (P - 2)))  // D^(P-2)
+#define MSBP(x, y) (((u64)(x) * (y)) >> 32)   // most significant bits product
+#define _to_f32(x) ((f32)(x) / 0x100000000)
 
 static_assert((1ULL << (D_BIT * P)) == 0x100000000, "we use u32 for operations!");
 
-Message message_from_partialmessage(PartialMessage m, u64 byte_encoded) {
+static Message        message_from_partialmessage(PartialMessage m, u64 byte_encoded);
+static PartialMessage partialmessage_new(u64 cap);
+
+static void           partialmessage_resize(PartialMessage *m, u64 cap);
+static void           message_resize(Message *m, u64 cap);
+static void           partialmessage_push(PartialMessage *m, u32 symbol);
+static void           partialmessage_push_unchecked(PartialMessage *m, u32 symbol);
+static void           message_free(Message m);
+static void           message_pad_with_zeroes(Message *input, u32 n);
+
+static void    interval_update(u8 symbol, u32Vec cum_distr, PartialMessage *output, u32 *base,
+                               u32 *len);
+static void    propagate_carry(PartialMessage *output);
+static void    encoder_renormalization(u32 *base, u32 *len, PartialMessage *output);
+static void    code_value_selection(u32 *base, u32 *len, PartialMessage *output);
+
+static u8      interval_selection(u32 *value, u32 *len, u32Vec *cum_distr);
+static void    decoder_renormalization(u32 *value, u32 *len, u64 *byte_decoded, Message input);
+
+static Message message_from_partialmessage(PartialMessage m, u64 byte_encoded) {
     assert(!m.outstanding && "message was not finished");
     return (Message){
         .cap          = m.cap,
@@ -25,7 +51,7 @@ Message message_from_partialmessage(PartialMessage m, u64 byte_encoded) {
     };
 }
 
-PartialMessage partialmessage_new(u64 cap) {
+static PartialMessage partialmessage_new(u64 cap) {
     assert(cap && "cap should be != 0");
     PartialMessage m = {
         .cap = cap,
@@ -41,7 +67,7 @@ void message_free(Message m) {
 }
 
 // @todo compilte-time abstraction: functions are identical
-void partialmessage_resize(PartialMessage *m, u64 cap) {
+static void partialmessage_resize(PartialMessage *m, u64 cap) {
     if (m->cap == cap) return;
     m->len = min(m->len, cap);
     m->cap = cap;
@@ -49,7 +75,7 @@ void partialmessage_resize(PartialMessage *m, u64 cap) {
     assert(m->ptr && "realloc failed");
 }
 
-void message_resize(Message *m, u64 cap) {
+static void message_resize(Message *m, u64 cap) {
     if (m->cap == cap) return;
     m->len = min(m->len, cap);
     m->cap = cap;
@@ -57,14 +83,14 @@ void message_resize(Message *m, u64 cap) {
     assert(m->ptr && "realloc failed");
 }
 
-void partialmessage_push(PartialMessage *m, u32 symbol) {
+static void partialmessage_push(PartialMessage *m, u32 symbol) {
     if (symbol != D - 1) {
         for (; m->outstanding; m->outstanding--) partialmessage_push_unchecked(m, D - 1);
         partialmessage_push_unchecked(m, symbol);
     } else m->outstanding++;
 }
 
-void partialmessage_push_unchecked(PartialMessage *m, u32 symbol) {
+static void partialmessage_push_unchecked(PartialMessage *m, u32 symbol) {
     if (m->len >= m->cap) partialmessage_resize(m, m->cap << 1);
     m->ptr[m->len++] = symbol;
 }
@@ -76,7 +102,7 @@ u64 message_print_hex(FILE *stream, Message m) {
     return retval;
 }
 
-void message_pad_with_zeroes(Message *m, u32 n) {
+static void message_pad_with_zeroes(Message *m, u32 n) {
     if (m->len + n > m->cap) message_resize(m, m->len + n);
     for (u32 i = m->len; i < m->len + n; i++) m->ptr[i] = 0;
 }
@@ -93,7 +119,8 @@ Message arithmetic_encoder(u8Vec input, u32Vec cum_distr) {
     return message_from_partialmessage(output, input.len);
 }
 
-void interval_update(u8 symbol, u32Vec cum_distr, PartialMessage *output, u32 *base, u32 *len) {
+static void interval_update(u8 symbol, u32Vec cum_distr, PartialMessage *output, u32 *base,
+                            u32 *len) {
     u32 y  = symbol == cum_distr.len - 1 ? *len : MSBP(*len, cum_distr.ptr[symbol + 1]);
     u32 a  = *base;
     u32 x  = MSBP(*len, cum_distr.ptr[symbol]);
@@ -103,12 +130,12 @@ void interval_update(u8 symbol, u32Vec cum_distr, PartialMessage *output, u32 *b
     if (a > *base) propagate_carry(output);
 }
 
-void propagate_carry(PartialMessage *output) {
+static void propagate_carry(PartialMessage *output) {
     output->ptr[output->len - 1]++;
     for (; output->outstanding; output->outstanding--) partialmessage_push_unchecked(output, 0);
 }
 
-void encoder_renormalization(u32 *base, u32 *len, PartialMessage *output) {
+static void encoder_renormalization(u32 *base, u32 *len, PartialMessage *output) {
     while (*len < DtoP_1) {
         partialmessage_push(output, MSBP(*base, D));
         *len  *= D;
@@ -116,7 +143,7 @@ void encoder_renormalization(u32 *base, u32 *len, PartialMessage *output) {
     }
 }
 
-void code_value_selection(u32 *base, u32 *len, PartialMessage *output) {
+static void code_value_selection(u32 *base, u32 *len, PartialMessage *output) {
     u32 a = *base;
     *base = (*base + (DtoP_1 >> 1));
     *len  = DtoP_2 - 1;
@@ -140,7 +167,7 @@ u8Vec arithmetic_decoder(Message *input_ptr, u32Vec cum_distr) {
     return output;
 }
 
-u8 interval_selection(u32 *val, u32 *len, u32Vec *cum_distr) {
+static u8 interval_selection(u32 *val, u32 *len, u32Vec *cum_distr) {
     u32 lb_idx = 0, ub_idx = cum_distr->len;
     u32 lb_int = 0, ub_int = *len;
     while (ub_idx - lb_idx > 1) {
@@ -154,15 +181,15 @@ u8 interval_selection(u32 *val, u32 *len, u32Vec *cum_distr) {
             lb_int = mid_int;
         }
     }
-    *val  = *val - lb_int;
-    *len  = ub_int - lb_int;
+    *val = *val - lb_int;
+    *len = ub_int - lb_int;
     return lb_idx;
 }
 
-void decoder_renormalization(u32 *val, u32 *len, u64 *byte_decoded, Message input) {
+static void decoder_renormalization(u32 *val, u32 *len, u64 *byte_decoded, Message input) {
     while (*len < DtoP_1) {
-        *val   = (*val << D_BIT) + input.ptr[(*byte_decoded)++];
-        *len   = (*len << D_BIT);
+        *val = (*val << D_BIT) + input.ptr[(*byte_decoded)++];
+        *len = (*len << D_BIT);
     }
 }
 
