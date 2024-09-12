@@ -10,10 +10,12 @@ typedef struct _Message {
     u8 *ptr;
 } Message;
 
-u64            message_print_hex(FILE *stream, Message m);
+void    message_free(Message m);
 
-Message        arithmetic_encoder(u8Vec input, u32Vec cum_distr);
+u64     message_print_hex(FILE *stream, Message m);
 
-u8Vec          arithmetic_decoder(Message *input, u32Vec cum_distr);
+Message arithmetic_encoder(u8Vec input, u32Vec cum_distr);
 
-u32Vec         cum_distr_from_rnd_u8vec(u8Vec v);
+u8Vec   arithmetic_decoder(Message *input, u32Vec cum_distr);
+
+u32Vec  cum_distr_from_rnd_u8vec(u8Vec v);

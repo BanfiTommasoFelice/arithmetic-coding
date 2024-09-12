@@ -29,7 +29,6 @@ static void           partialmessage_resize(PartialMessage *m, u64 cap);
 static void           message_resize(Message *m, u64 cap);
 static void           partialmessage_push(PartialMessage *m, u32 symbol);
 static void           partialmessage_push_unchecked(PartialMessage *m, u32 symbol);
-static void           message_free(Message m);
 static void           message_pad_with_zeroes(Message *input, u32 n);
 
 static void    interval_update(u8 symbol, u32Vec cum_distr, PartialMessage *output, u32 *base,
