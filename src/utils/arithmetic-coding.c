@@ -155,12 +155,11 @@ static void code_value_selection(u32 *const base, u32 *const len, PartialMessage
     encoder_renormalization(base, len, output);
 }
 
-u8Vec arithmetic_decoder(Message *const input_ptr, u32Vec const cum_distr) {
-    u32           len          = UINT32_MAX;
-    u64           byte_decoded = P;
-    u32           val          = 0;
-    Message const input        = *input_ptr;
-    u8Vec         output       = u8vec_new(input.byte_encoded);
+u8Vec arithmetic_decoder(Message const input, u32Vec const cum_distr) {
+    u32   len          = UINT32_MAX;
+    u64   byte_decoded = P;
+    u32   val          = 0;
+    u8Vec output       = u8vec_new(input.byte_encoded);
     for (u32 i = 0; i < P; i++) val += (u32)input.ptr[i] << ((P - i - 1) << 3);
     for (u32 k = 0; k < input.byte_encoded; k++) {
         const u8 symbol = interval_selection(&val, &len, cum_distr);

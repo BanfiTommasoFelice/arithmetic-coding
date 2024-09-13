@@ -14,8 +14,7 @@ u64     message_print_hex(FILE *const stream, Message const m);
 
 Message arithmetic_encoder(u8Vec const input, u32Vec const cum_distr);
 
-u8Vec   arithmetic_decoder(Message *const input, u32Vec const cum_distr);
+u8Vec   arithmetic_decoder(Message const input, u32Vec const cum_distr);
 
 u32Vec  cum_distr_from_rnd_u8vec(u8Vec const v);
 u32Vec  cum_distr_from_rnd_u8vec_unsafe(u8Vec const v);
-
