@@ -5,15 +5,19 @@ Implementation of arithmetic codings
 ## Compilation
 Debug:
 ```bash
+mkdir -p build
 cd build
-cmake -DCMAKE_BUILD_TYPE=Debug .. && make
-./arithmetic-coding <../in/divina-commedia.txt
+cmake .. -DCMAKE_BUILD_TYPE=Debug
+make
+./arithmetic-coding <CMakeCache.txt # or any other file
 ```
 Release:
 ```bash
+mkdir -p build
 cd build
-cmake -DCMAKE_BUILD_TYPE=Release .. && make
-./arithmetic-coding <../in/divina-commedia.txt
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make
+./arithmetic-coding <CMakeCache.txt # or any other file
 ```
 
 ## Todo
