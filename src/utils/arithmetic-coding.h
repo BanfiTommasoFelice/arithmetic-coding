@@ -1,5 +1,5 @@
-#include "bignum.h"
 #include "type.h"
+#include "vec.h"
 
 // the first bit is `.ptr[0] & 0x01`, the second `.ptr[0] & 0x02`, ...,
 // the last `.ptr[len >> 3] & (1 << (len & 0x7))`

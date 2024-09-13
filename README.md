@@ -5,15 +5,15 @@ Implementation of arithmetic codings
 ## Compilation
 Debug:
 ```bash
-make clean main && ./bin/main <in/in.txt
-```
-Fast:
-```bash
-make clean MODE=fast main && ./bin/main <in/in.txt
+cd build
+cmake -DCMAKE_BUILD_TYPE=Debug .. && make
+./arithmetic-coding <../in/divina-commedia.txt
 ```
 Release:
 ```bash
-make clean MODE=release main && ./bin/main <in/in.txt
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release .. && make
+./arithmetic-coding <../in/divina-commedia.txt
 ```
 
 ## Todo
