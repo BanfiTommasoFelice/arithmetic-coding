@@ -15,11 +15,11 @@
     var = (end.tv_sec - start.tv_sec) + (f64)(end.tv_usec - start.tv_usec) / 1e6;
 
 i32 main(void) {
-    u8Vec          data = string_to_u8vec(string_read_file(stdin));
+    u8Vec const    data = string_to_u8vec(string_read_file(stdin));
     struct timeval end, start;
-    time_of(u32Vec const cum_distr = cum_distr_from_rnd_u8vec(data), f64 stat_time);
-    time_of(Message const encoded = arithmetic_encoder(data, cum_distr), f64 encoding_time);
-    time_of(u8Vec const decoded = arithmetic_decoder(encoded, cum_distr), f64 decoding_time);
+    time_of(u32Vec const cum_distr = cum_distr_from_rnd_u8vec(data), f64 const stat_time);
+    time_of(Message const encoded = arithmetic_encoder(data, cum_distr), f64 const encoding_time);
+    time_of(u8Vec const decoded = arithmetic_decoder(encoded, cum_distr), f64 const decoding_time);
 
 #ifndef PRINT_CONTENT
     printf("Data         : %6lu bytes\n", data.len);
