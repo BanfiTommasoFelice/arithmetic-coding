@@ -1,5 +1,5 @@
 CXX                = gcc
-CXXFLAGS_COMMON    = -std=c17 -Wall -Wextra
+CXXFLAGS_COMMON    = -std=c99 -Wall -Wextra
 CXXFLAGS_FAST      = $(CXXFLAGS_COMMON) -O3 -ffast-math
 CXXFLAGS_RELEASE   = $(CXXFLAGS_FAST)   --static -DNDEBUG 
 CXXFLAGS_DEBUG     = $(CXXFLAGS_COMMON) -O0 -g3 -fsanitize=address,undefined

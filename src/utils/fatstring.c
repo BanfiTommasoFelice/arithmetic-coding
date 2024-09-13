@@ -43,12 +43,16 @@ String string_read(FILE *const stream) {
     return s;
 }
 
-String string_read_to_eof(FILE *const stream) {
-    i32    ch;
-    String s = string_new(64);
-    while (EOF != (ch = getc(stream))) string_push(&s, ch);
+String string_read_file(FILE *const stream) {
+    __attribute__((unused)) u32 check = fseek(stream, 0L, SEEK_END);
+    assert(!check && "fseek() error");
+    u64 size = ftell(stream);
+    assert(size != UINT64_MAX && "ftell() error");
+    rewind(stream);
+    String s = string_new(size + 1);
+    fread(s.ptr, sizeof(char), size, stream);
+    s.len = size;
     string_push(&s, '\0');
-    string_shrink(&s);
     return s;
 }
 
