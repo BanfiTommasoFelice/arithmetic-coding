@@ -24,9 +24,9 @@ static_assert((1ULL << (D_BIT * P)) == 0x100000000, "Use u32 for operations!");
 static Message        message_from_partialmessage(PartialMessage const m, u64 const byte_encoded);
 static PartialMessage partialmessage_new(u64 cap);
 
-static void           partialmessage_resize(PartialMessage *const m, u64 const cap);
-static void           partialmessage_push(PartialMessage *const m, u32 const symbol);
-static void           partialmessage_push_unchecked(PartialMessage *const m, u32 const symbol);
+static void partialmessage_resize(PartialMessage *const m, u64 const cap);
+static void partialmessage_push(PartialMessage *const m, u32 const symbol);
+static void partialmessage_push_unchecked(PartialMessage *const m, u32 const symbol);
 
 static void interval_update(u8 const symbol, u32Vec const cum_distr, PartialMessage *const output,
                             u32 *const base, u32 *const len);
@@ -152,16 +152,24 @@ static u8 interval_selection(u32 *const val, u32 *const len, u32Vec const cum_di
     u32 lb_idx = 0, ub_idx = cum_distr.len;
     u32 lb_int = 0, ub_int = *len;
 
-    while (ub_idx - lb_idx > 1) {  // D_BIT loops
+    // while (ub_idx - lb_idx > 1) {
+    for (u32 i = 0; i < D_BIT; i++) {
         u32 const mid_idx = (lb_idx + ub_idx) >> 1;
         u32 const mid_int = MSBP(*len, cum_distr.ptr[mid_idx]);
-        u32       cond    = mid_int > *val;                          // if (mid_int > *val) {
-        u32       mask_0  = cond - 1;                                //     ub_idx = mid_idx;
-        u32       mask_1  = !cond - 1;                               //     ub_int = mid_int;
-        ub_idx            = (ub_idx & mask_0) ^ (mid_idx & mask_1);  // } else {
-        ub_int            = (ub_int & mask_0) ^ (mid_int & mask_1);  //     lb_idx = mid_idx;
-        lb_idx            = (lb_idx & mask_1) ^ (mid_idx & mask_0);  //     lb_int = mid_int;
-        lb_int            = (lb_int & mask_1) ^ (mid_int & mask_0);  // }
+        // u32       cond    = mid_int > *val;
+        // u32       mask_0  = cond - 1;
+        // u32       mask_1  = !cond - 1;
+        // ub_idx            = (ub_idx & mask_0) ^ (mid_idx & mask_1);
+        // ub_int            = (ub_int & mask_0) ^ (mid_int & mask_1);
+        // lb_idx            = (lb_idx & mask_1) ^ (mid_idx & mask_0);
+        // lb_int            = (lb_int & mask_1) ^ (mid_int & mask_0);
+        if (mid_int > *val) {
+            ub_idx = mid_idx;
+            ub_int = mid_int;
+        } else {
+            lb_idx = mid_idx;
+            lb_int = mid_int;
+        }
     }
 
     *val = *val - lb_int;

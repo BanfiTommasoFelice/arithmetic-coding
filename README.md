@@ -7,7 +7,7 @@ Debug:
 ```bash
 mkdir -p build
 cd build
-cmake .. -DCMAKE_BUILD_TYPE=Debug
+cmake .. -DCMAKE_BUILD_TYPE=d
 make
 ./arithmetic-coding <CMakeCache.txt # or any other file
 ```
@@ -15,7 +15,15 @@ Release:
 ```bash
 mkdir -p build
 cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
+cmake .. -DCMAKE_BUILD_TYPE=r
+make
+./arithmetic-coding <CMakeCache.txt # or any other file
+```
+Analysis:
+```bash
+mkdir -p build
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=a
 make
 ./arithmetic-coding <CMakeCache.txt # or any other file
 ```

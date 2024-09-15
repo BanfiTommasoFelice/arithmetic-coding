@@ -8,21 +8,21 @@ AllowShortLoopsOnASingleLine: true
 AllowShortIfStatementsOnASingleLine: AllIfsAndElse
 AlignConsecutiveAssignments:
     Enabled: true
-    AcrossEmptyLines: true
+    # AcrossEmptyLines: true
     AcrossComments: true
     AlignCompound: true
     PadOperators: true
 AlignConsecutiveDeclarations:
     Enabled: true
-    AcrossEmptyLines: true
+    # AcrossEmptyLines: true
     AcrossComments: true
     AlignFunctionPointers: true
 AlignConsecutiveMacros:
     Enabled: true
-    AcrossEmptyLines: true
+    # AcrossEmptyLines: true
     AcrossComments: false
 AlignConsecutiveBitFields:
     Enabled: true
-    AcrossEmptyLines: true
+    # AcrossEmptyLines: true
     AcrossComments: true
 PointerAlignment: Right

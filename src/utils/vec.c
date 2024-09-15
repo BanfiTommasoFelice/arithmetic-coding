@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 #define _IMPLEMENT_VEC(_type_)                                            \
                                                                           \
     _type_##Vec _type_##vec_new(u64 const cap) {                          \
