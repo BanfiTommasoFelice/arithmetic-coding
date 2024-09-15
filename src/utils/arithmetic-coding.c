@@ -25,7 +25,6 @@ static Message        message_from_partialmessage(PartialMessage const m, u64 co
 static PartialMessage partialmessage_new(u64 cap);
 
 static void           partialmessage_resize(PartialMessage *const m, u64 const cap);
-static void           message_resize(Message *const m, u64 const cap);
 static void           partialmessage_push(PartialMessage *const m, u32 const symbol);
 static void           partialmessage_push_unchecked(PartialMessage *const m, u32 const symbol);
 
@@ -72,14 +71,6 @@ static void partialmessage_resize(PartialMessage *const m, u64 const cap) {
     assert(m->ptr && "realloc failed");
 }
 
-static void message_resize(Message *const m, u64 const cap) {
-    if (m->cap == cap) return;
-    m->len = min(m->len, cap);
-    m->cap = cap;
-    m->ptr = realloc(m->ptr, cap * sizeof(*m->ptr));
-    assert(m->ptr && "realloc failed");
-}
-
 static void partialmessage_push(PartialMessage *const m, u32 const symbol) {
     if (symbol != D - 1) {
         for (; m->outstanding; m->outstanding--) partialmessage_push_unchecked(m, D - 1);
@@ -97,11 +88,6 @@ u64 message_print_hex(FILE *const stream, Message const m) {
     u32 upper_limit = m.len;
     for (u32 i = 0; i < upper_limit; i++) retval += fprintf(stream, "%02x", m.ptr[i]);
     return retval;
-}
-
-static void message_pad_with_zeroes(Message *const m, u32 const n) {
-    if (m->len + n > m->cap) message_resize(m, m->len + n);
-    for (u32 i = m->len; i < m->len + n; i++) m->ptr[i] = 0;
 }
 
 Message arithmetic_encoder(u8Vec const input, u32Vec const cum_distr) {
