@@ -15,7 +15,7 @@ typedef struct _PartialMessage {
 #define DtoP_1     (1u << (D_BIT * (P - 1)))  // D^(P-1)
 #define DtoP_2     (1u << (D_BIT * (P - 2)))  // D^(P-2)
 #define MSBP(x, y) (((u64)(x) * (y)) >> 32)   // most significant bits product
-#define _to_f32(x) ((f32)(x) / 0x100000000)
+#define dbg_f32(x) ((f32)(x) / 0x100000000)
 
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)  // std >= c11
 static_assert((1ULL << (D_BIT * P)) == 0x100000000, "Use u32 for operations!");
@@ -88,6 +88,14 @@ u64 message_print_hex(FILE *const stream, Message const m) {
     u32 upper_limit = m.len;
     for (u32 i = 0; i < upper_limit; i++) retval += fprintf(stream, "%02x", m.ptr[i]);
     return retval;
+}
+
+u8Vec message_to_u8Vec(Message const m) {
+    return (u8Vec) {
+        .len = m.len,
+        .cap = m.cap,
+        .ptr = m.ptr,
+    };
 }
 
 Message arithmetic_encoder(u8Vec const input, u32Vec const cum_distr) {
