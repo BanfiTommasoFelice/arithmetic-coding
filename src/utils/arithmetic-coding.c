@@ -3,16 +3,13 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#include "type.h"
-#include "vec.h"
-
 typedef struct _PartialMessage {
     u64 cap, len, outstanding;
     u8 *ptr;
 } PartialMessage;
 
 #define INIT_CAP   4u
-#define D          256u  // don't change! 2^(2^x), x = 1,2,3,4 -> does not work for others
+#define D          256u  // don't change! 2^(2^x), x in {1,2,3,4} -> does not work for others
 #define D_BIT      __builtin_ctz(D)
 #define P          32u / D_BIT
 #define DtoP_1     (1u << (D_BIT * (P - 1)))  // D^(P-1)
@@ -20,7 +17,7 @@ typedef struct _PartialMessage {
 #define MSBP(x, y) (((u64)(x) * (y)) >> 32)   // most significant bits product
 #define _to_f32(x) ((f32)(x) / 0x100000000)
 
-#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L) // std >= c11
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)  // std >= c11
 static_assert((1ULL << (D_BIT * P)) == 0x100000000, "Use u32 for operations!");
 #endif
 
@@ -31,8 +28,6 @@ static void           partialmessage_resize(PartialMessage *const m, u64 const c
 static void           message_resize(Message *const m, u64 const cap);
 static void           partialmessage_push(PartialMessage *const m, u32 const symbol);
 static void           partialmessage_push_unchecked(PartialMessage *const m, u32 const symbol);
-
-__attribute__((unused)) static void message_pad_with_zeroes(Message *const input, u32 const n);
 
 static void interval_update(u8 const symbol, u32Vec const cum_distr, PartialMessage *const output,
                             u32 *const base, u32 *const len);
@@ -170,17 +165,19 @@ u8Vec arithmetic_decoder(Message const input, u32Vec const cum_distr) {
 static u8 interval_selection(u32 *const val, u32 *const len, u32Vec const cum_distr) {
     u32 lb_idx = 0, ub_idx = cum_distr.len;
     u32 lb_int = 0, ub_int = *len;
-    while (ub_idx - lb_idx > 1) {
+
+    while (ub_idx - lb_idx > 1) {  // D_BIT loops
         u32 const mid_idx = (lb_idx + ub_idx) >> 1;
         u32 const mid_int = MSBP(*len, cum_distr.ptr[mid_idx]);
-        if (mid_int > *val) {
-            ub_idx = mid_idx;
-            ub_int = mid_int;
-        } else {
-            lb_idx = mid_idx;
-            lb_int = mid_int;
-        }
+        u32       cond    = mid_int > *val;                          // if (mid_int > *val) {
+        u32       mask_0  = cond - 1;                                //     ub_idx = mid_idx;
+        u32       mask_1  = !cond - 1;                               //     ub_int = mid_int;
+        ub_idx            = (ub_idx & mask_0) ^ (mid_idx & mask_1);  // } else {
+        ub_int            = (ub_int & mask_0) ^ (mid_int & mask_1);  //     lb_idx = mid_idx;
+        lb_idx            = (lb_idx & mask_1) ^ (mid_idx & mask_0);  //     lb_int = mid_int;
+        lb_int            = (lb_int & mask_1) ^ (mid_int & mask_0);  // }
     }
+
     *val = *val - lb_int;
     *len = ub_int - lb_int;
     return lb_idx;
@@ -189,8 +186,6 @@ static u8 interval_selection(u32 *const val, u32 *const len, u32Vec const cum_di
 static void decoder_renormalization(u32 *const val, u32 *const len, u64 *const byte_decoded,
                                     Message const input) {
     while (*len < DtoP_1) {
-        // if heap-buffer-flow, then check `message_pad_with_zeroes()`: call this as the first line
-        // in `arithmetic_decoder()`
         *val = (*val << D_BIT) + input.ptr[(*byte_decoded)++];
         *len = (*len << D_BIT);
     }

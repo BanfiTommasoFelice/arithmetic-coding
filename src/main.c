@@ -44,7 +44,6 @@ i32 main(void) {
     printf("Get stat time: %6.3f seconds \n", stat_time);
     printf("Encoding time: %6.3f seconds \n", encoding_time);
     printf("Decoding time: %6.3f seconds \n", decoding_time);
-    printf("Decoding time: %6.3f seconds \n", decoding_time);
 
     u8vec_free(data);
     u32vec_free(cum_distr);

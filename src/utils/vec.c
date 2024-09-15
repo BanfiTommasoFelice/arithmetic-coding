@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "stdio.h"
 
 #define _IMPLEMENT_VEC(_type_)                                            \
                                                                           \

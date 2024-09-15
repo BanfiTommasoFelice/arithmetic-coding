@@ -1,9 +1,6 @@
 #include "bignum.h"
 
 #include <assert.h>
-#include <stdio.h>
-
-#include "vec.h"
 
 BigNum bignum_new(u64 const cap) {
     return u64vec_new_init(cap, 0);
@@ -118,11 +115,9 @@ String bignum_to_string(BigNum const n) {
 
 String bignum_to_string_hex(BigNum const n, u32 const space) {
     String s;
-    if (!n.len) {
-        s = string_new(2);
-        sprintf(s.ptr, "0");
-    } else {
-        s = string_new(n.len * (space ? 17 : 16) + 2);
+    s = string_new(n.len * (space ? 17 : 16) + 2);
+    if (!n.len) sprintf(s.ptr, "0");
+    else {
         for (u32 i = n.len - 1; i != UINT32_MAX; i--)
             sprintf(s.ptr + ((n.len - 1 - i) * (space ? 17 : 16)), "%016lx ", n.ptr[i]);
     }

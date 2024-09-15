@@ -1,11 +1,7 @@
 #include "fatstring.h"
 
-#include <assert.h>
 #include <ctype.h>
-#include <stdio.h>
 #include <stdlib.h>
-
-#include "type.h"
 
 String string_new(u64 const cap) {
     String s;

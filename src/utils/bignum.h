@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdio.h>
+
 #include "fatstring.h"
 #include "type.h"
 #include "vec.h"

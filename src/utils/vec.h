@@ -1,9 +1,10 @@
 #pragma once
 
-#include "stdio.h"
+#include <stdio.h>
+
 #include "type.h"
 
-// Achtung: custom free are not implement yet: not vector of pointers!
+// Achtung: custom free are not implement yet: no vector of pointers!
 
 #define _DECLARE_VEC(_type_)                                                   \
     typedef struct _##_type_##Vec {                                            \
