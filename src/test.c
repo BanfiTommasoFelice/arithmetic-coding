@@ -16,17 +16,22 @@
 
 i32 main(i32 __attribute__((unused)) argc, char **argv) {
     assert(argc == 3 && "argc != 3");
-    u64 n      = strtoull(argv[1], NULL, 0);
-    u64 n_test = strtoull(argv[2], NULL, 0);
+    if (argc != 3) {
+        fprintf(stderr, "Usage: %s #bytes #tests", argv[0]);
+        exit(1);
+    }
+
+    u64 bytes = strtoull(argv[1], NULL, 0);
+    u64 tests = strtoull(argv[2], NULL, 0);
 
     struct timeval seed;
     gettimeofday(&seed, NULL);
     srand(seed.tv_usec);
 
     u64   passed = 0;
-    u8Vec data   = u8vec_new(n);
-    for (u64 i = 0; i < n_test; i++) {
-        u8vec_fill_rnd_distr(&data, n);
+    u8Vec data   = u8vec_new(bytes);
+    for (u64 i = 0; i < tests; i++) {
+        u8vec_fill_rnd_distr(&data, bytes);
         struct timeval end, start;
         u32Vec const   cum_distr = cum_distr_from_rnd_u8vec(data);
         time_of(Message const encoded = arithmetic_encoder(data, cum_distr),
@@ -38,7 +43,6 @@ i32 main(i32 __attribute__((unused)) argc, char **argv) {
         wrong    |= (data.len != decoded.len);
         for (u32 i = 0; i < data.len; i++) wrong |= (data.ptr[i] != decoded.ptr[i]);
         passed += !wrong;
-
 
         printf("Test %3lu %s. ", i, wrong ? "not passed" : "passed");
         printf("Encoding: %6.3f sec - ", encoding_time);
@@ -54,12 +58,13 @@ i32 main(i32 __attribute__((unused)) argc, char **argv) {
             printf("    Decoded      : %6lu bytes\n", decoded.len);
             printf("    `%s`\n", decoded.ptr);
         }
+        fflush(stdout);
         u32vec_free(cum_distr);
         message_free(encoded);
         u8vec_free(decoded);
     }
     u8vec_free(data);
-    printf("Total passed: %lu / %lu\n", passed, n_test);
+    printf("Total passed: %lu / %lu\n", passed, tests);
 
     return 0;
 }

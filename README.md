@@ -28,15 +28,23 @@ make
 ./arithmetic-coding <CMakeCache.txt # or any other file
 ```
 
+## Test
+```bash
+mkdir -p build
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=r
+make
+./test 1000000 10 # or any other number
+```
+
 ## Todo
-- test cases
+- make `main.c` useful
 - write directly to a file
 - adaptive coding
 - simd intrinsics
 - multithread
 
 ## Extra
-
-There are also other library functions, that probably will be usefull for generating random arrays
+There are also other library functions, that probably will be useful for generating random arrays
 mod P, P not necessarily prime
 

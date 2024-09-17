@@ -22,17 +22,17 @@ i32 main(void) {
     time_of(u8Vec const decoded = arithmetic_decoder(encoded, cum_distr), f64 const decoding_time);
 
 #ifndef PRINT_CONTENT
-    printf("Data         : %6lu bytes\n", data.len);
-    printf("Encoded      : %6lu bytes\n", encoded.len);
+    fprintf(stderr, "Data         : %6lu bytes\n", data.len);
+    fprintf(stderr, "Encoded      : %6lu bytes\n", encoded.len);
 #else
-    printf("Data         : %6lu bytes\n", data.len);
-    printf("`%s`\n", data.ptr);
-    printf("Encoded      : %6lu bytes\n", encoded.len);
-    printf("`");
-    message_print_hex(stdout, encoded);
-    printf("`\n");
-    printf("Decoded      : %6lu bytes\n", decoded.len);
-    printf("`%s`\n", decoded.ptr);
+    fprintf(stderr, "Data         : %6lu bytes\n", data.len);
+    fprintf(stderr, "`%s`\n", data.ptr);
+    fprintf(stderr, "Encoded      : %6lu bytes\n", encoded.len);
+    fprintf(stderr, "`");
+    message_print_hex(stderr, encoded);
+    fprintf(stderr, "`\n");
+    fprintf(stderr, "Decoded      : %6lu bytes\n", decoded.len);
+    fprintf(stderr, "`%s`\n", decoded.ptr);
 #endif
 
     fflush(stdout);
@@ -40,10 +40,10 @@ i32 main(void) {
     for (u32 i = 0; i < data.len; i++)
         assert(data.ptr[i] == decoded.ptr[i] && "original data and decoded data are different");
 
-    printf("Compression  : %6.2f %%\n", (double)encoded.len * 100 / data.len);
-    printf("Get stat time: %6.3f seconds \n", stat_time);
-    printf("Encoding time: %6.3f seconds \n", encoding_time);
-    printf("Decoding time: %6.3f seconds \n", decoding_time);
+    fprintf(stderr, "Compression  : %6.2f %%\n", (double)encoded.len * 100 / data.len);
+    fprintf(stderr, "Get stat time: %6.3f seconds \n", stat_time);
+    fprintf(stderr, "Encoding time: %6.3f seconds \n", encoding_time);
+    fprintf(stderr, "Decoding time: %6.3f seconds \n", decoding_time);
 
     u8vec_free(data);
     u32vec_free(cum_distr);
