@@ -12,5 +12,5 @@ file(GLOB SOURCE_LIB "src/utils/*.c")
 
 file(GLOB HEADER_LIB "src/utils/*.h") # useless?
 
-add_executable(arithmetic-coding src/main.c ${SOURCE_LIB})
-
+# add_executable(arithmetic-coding src/main.c ${SOURCE_LIB})
+add_executable(test src/test.c ${SOURCE_LIB})

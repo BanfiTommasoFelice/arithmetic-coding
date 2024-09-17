@@ -30,3 +30,5 @@ _DECLARE_VEC(u64)
 _DECLARE_VEC(u32)
 _DECLARE_VEC(u16)
 _DECLARE_VEC(u8)
+
+void u8vec_fill_rnd_distr(u8Vec *const v, u64 const n);

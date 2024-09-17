@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 
 #define _IMPLEMENT_VEC(_type_)                                            \
                                                                           \
@@ -98,3 +99,37 @@ _IMPLEMENT_VEC(u64)
 _IMPLEMENT_VEC(u32)
 _IMPLEMENT_VEC(u16)
 _IMPLEMENT_VEC(u8)
+
+// call srand() before
+void u8vec_fill_rnd_distr(u8Vec *const v, u64 const n) {
+    assert(n <= v->cap || "n should be less than or equal to cap");
+    assert(RAND_MAX == 0x7fffffff);
+    v->len = n;
+
+    u32 r[257];
+    u32 tot = 0, cum = 0;
+    for (u32 i = 0; i < 256; i++) {
+        u32 x = rand();
+        r[i]  = ((x & 0xff0) >> 4) << (x & 0xf);  // avoid OF: 64 - 31 (RAND_MAX) - 8 (256) = 25 bit
+        // 0b00000000000000000000bbbbbbbbssss                                16 (s) + 8 (b) = 24 bit
+        tot += r[i];
+    }
+
+    r[0] = 0;
+    for (u32 i = 1; i < 256; i++) {
+        cum += r[i];
+        r[i] = (u64)cum * RAND_MAX / tot;
+    }
+    for (u64 i = 0; i < n; i++) {
+        u32 const x      = rand();
+        u32       lb_idx = 0, ub_idx = 256;
+        for (u32 i = 0; i < 8; i++) {
+            u32 const mid_idx = (lb_idx + ub_idx) >> 1;
+            u32 const mid_int = r[mid_idx];
+            if (mid_int > x) ub_idx = mid_idx;
+            else lb_idx = mid_idx;
+        }
+        assert(ub_idx - lb_idx == 1);
+        v->ptr[i] = lb_idx;
+    }
+}

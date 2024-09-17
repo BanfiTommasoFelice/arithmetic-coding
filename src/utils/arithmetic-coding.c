@@ -39,7 +39,6 @@ static void decoder_renormalization(u32 *const value, u32 *const len, u64 *const
                                     Message const input);
 
 static Message message_from_partialmessage(PartialMessage const m, u64 const byte_encoded) {
-    assert(!m.outstanding && "message was not finished");
     return (Message){
         .cap          = m.cap,
         .len          = m.len,
@@ -91,7 +90,7 @@ u64 message_print_hex(FILE *const stream, Message const m) {
 }
 
 u8Vec message_to_u8Vec(Message const m) {
-    return (u8Vec) {
+    return (u8Vec){
         .len = m.len,
         .cap = m.cap,
         .ptr = m.ptr,
@@ -107,6 +106,7 @@ Message arithmetic_encoder(u8Vec const input, u32Vec const cum_distr) {
         if (len < DtoP_1) encoder_renormalization(&base, &len, &output);
     }
     code_value_selection(&base, &len, &output);
+    for (; output.outstanding; output.outstanding--) partialmessage_push_unchecked(&output, D - 1);
     return message_from_partialmessage(output, input.len);
 }
 
@@ -179,6 +179,7 @@ static u8 interval_selection(u32 *const val, u32 *const len, u32Vec const cum_di
             lb_int = mid_int;
         }
     }
+    assert(ub_idx - lb_idx == 1);
 
     *val = *val - lb_int;
     *len = ub_int - lb_int;
