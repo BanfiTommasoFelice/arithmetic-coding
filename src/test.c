@@ -40,10 +40,10 @@ i32 main(i32 __attribute__((unused)) argc, char **argv) {
         passed += !wrong;
 
 
-        printf("Test %3lu %s. ", i, wrong ? "not ok" : "ok");
-        printf("Encoding: %6.3f - ", encoding_time);
-        printf("Decoding: %6.3f - ", decoding_time);
-        printf("Compression: %6.3f\n", (double)encoded.len * 100 / data.len);
+        printf("Test %3lu %s. ", i, wrong ? "not passed" : "passed");
+        printf("Encoding: %6.3f sec - ", encoding_time);
+        printf("Decoding: %6.3f sec - ", decoding_time);
+        printf("Compression: %6.2f %%\n", (double)encoded.len * 100 / data.len);
         if (wrong) {
             printf("    Data         : %6lu bytes\n", data.len);
             printf("    `%s`\n", data.ptr);
