@@ -21,12 +21,13 @@ typedef struct _PartialMessage {
 static_assert((1ULL << (D_BIT * P)) == 0x100000000, "Use u32 for operations!");
 #endif
 
-static Message        message_from_partialmessage(PartialMessage const m, u64 const byte_encoded);
+static Message        message_from_partialmessage(PartialMessage *const m, u64 const byte_encoded);
 static PartialMessage partialmessage_new(u64 cap);
 
 static void partialmessage_resize(PartialMessage *const m, u64 const cap);
 static void partialmessage_push(PartialMessage *const m, u32 const symbol);
 static void partialmessage_push_unchecked(PartialMessage *const m, u32 const symbol);
+static void partialmessage_write_outstanding(PartialMessage *const m, u32 const symbol);
 
 static void interval_update(u8 const symbol, u32Vec const cum_distr, PartialMessage *const output,
                             u32 *const base, u32 *const len);
@@ -38,11 +39,16 @@ static u8   interval_selection(u32 *const value, u32 *const len, u32Vec const cu
 static void decoder_renormalization(u32 *const value, u32 *const len, u64 *const byte_decoded,
                                     Message const input);
 
-static Message message_from_partialmessage(PartialMessage const m, u64 const byte_encoded) {
+static void partialmessage_write_outstanding(PartialMessage *const m, u32 const symbol) {
+    for (; m->outstanding; m->outstanding--) partialmessage_push_unchecked(m, symbol);
+}
+
+static Message message_from_partialmessage(PartialMessage *const m, u64 const byte_encoded) {
+    partialmessage_write_outstanding(m, D - 1);
     return (Message){
-        .cap          = m.cap,
-        .len          = m.len,
-        .ptr          = m.ptr,
+        .cap          = m->cap,
+        .len          = m->len,
+        .ptr          = m->ptr,
         .byte_encoded = byte_encoded,
     };
 }
@@ -72,7 +78,7 @@ static void partialmessage_resize(PartialMessage *const m, u64 const cap) {
 
 static void partialmessage_push(PartialMessage *const m, u32 const symbol) {
     if (symbol != D - 1) {
-        for (; m->outstanding; m->outstanding--) partialmessage_push_unchecked(m, D - 1);
+        partialmessage_write_outstanding(m, D - 1);
         partialmessage_push_unchecked(m, symbol);
     } else m->outstanding++;
 }
@@ -106,8 +112,7 @@ Message arithmetic_encoder(u8Vec const input, u32Vec const cum_distr) {
         if (len < DtoP_1) encoder_renormalization(&base, &len, &output);
     }
     code_value_selection(&base, &len, &output);
-    for (; output.outstanding; output.outstanding--) partialmessage_push_unchecked(&output, D - 1);
-    return message_from_partialmessage(output, input.len);
+    return message_from_partialmessage(&output, input.len);
 }
 
 static void interval_update(u8 const symbol, u32Vec const cum_distr, PartialMessage *const output,
@@ -123,7 +128,7 @@ static void interval_update(u8 const symbol, u32Vec const cum_distr, PartialMess
 
 static void propagate_carry(PartialMessage *const output) {
     output->ptr[output->len - 1]++;
-    for (; output->outstanding; output->outstanding--) partialmessage_push_unchecked(output, 0);
+    partialmessage_write_outstanding(output, 0);
 }
 
 static void encoder_renormalization(u32 *const base, u32 *const len, PartialMessage *const output) {

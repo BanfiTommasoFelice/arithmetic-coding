@@ -44,7 +44,7 @@ i32 main(i32 __attribute__((unused)) argc, char **argv) {
         for (u32 i = 0; i < data.len; i++) wrong |= (data.ptr[i] != decoded.ptr[i]);
         passed += !wrong;
 
-        printf("Test %3lu %s. ", i, wrong ? "not passed" : "passed");
+        printf("Test %3lu %s. ", i, wrong ? "NOT passed" : "passed");
         printf("Encoding: %6.3f sec - ", encoding_time);
         printf("Decoding: %6.3f sec - ", decoding_time);
         printf("Compression: %6.2f %%\n", (double)encoded.len * 100 / data.len);
