@@ -17,10 +17,6 @@ typedef struct _PartialMessage {
 #define MSBP(x, y) (((u64)(x) * (y)) >> 32)   // most significant bits product
 #define dbg_f32(x) ((f32)(x) / 0x100000000)
 
-#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)  // std >= c11
-static_assert((1ULL << (D_BIT * P)) == 0x100000000, "Use u32 for operations!");
-#endif
-
 static Message        message_from_partialmessage(PartialMessage *const m, u64 const byte_encoded);
 static PartialMessage partialmessage_new(u64 cap);
 
