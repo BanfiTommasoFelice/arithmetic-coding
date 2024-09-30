@@ -111,7 +111,7 @@ void u8vec_fill_rnd_distr(u8Vec *const v, u64 const n) {
     for (u32 i = 0; i < 256; i++) {
         u32 x = rand();
         r[i]  = ((x & 0xff0) >> 4) << (x & 0xf);  // avoid OF: 64 - 31 (RAND_MAX) - 8 (256) = 25 bit
-        // 0b00000000000000000000bbbbbbbbssss                                16 (s) + 8 (b) = 24 bit
+        // 0b00000000000000000000BBBBBBBBSSSS                16 (bit Shift) + 8 (Base bits) = 24 bit
         tot += r[i];
     }
 

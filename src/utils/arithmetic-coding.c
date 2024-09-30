@@ -158,9 +158,9 @@ u8Vec arithmetic_decoder(Message const input, u32Vec const cum_distr) {
 }
 
 static u8 interval_selection(u32 *const val, u32 *const len, u32Vec const cum_distr) {
+    // using `u32 lambda  = ((u64)*val << 32) / *len;` to avoid loop mul leads to precision problems
     u32 lb_idx = 0, ub_idx = cum_distr.len;
     u32 lb_int = 0, ub_int = *len;
-
     // while (ub_idx - lb_idx > 1) {
     for (u32 i = 0; i < D_BIT; i++) {
         u32 const mid_idx = (lb_idx + ub_idx) >> 1;
