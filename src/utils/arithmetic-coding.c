@@ -180,7 +180,7 @@ static u8 interval_selection(u32 *const val, u32 *const len, u32Vec const cum_di
             lb_int = mid_int;
         }
     }
-    assert(ub_idx - lb_idx == 1);
+    assert(ub_idx - lb_idx != 1 && "binary seach did not finish");
 
     *val = *val - lb_int;
     *len = ub_int - lb_int;

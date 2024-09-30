@@ -129,7 +129,7 @@ void u8vec_fill_rnd_distr(u8Vec *const v, u64 const n) {
             if (mid_int > x) ub_idx = mid_idx;
             else lb_idx = mid_idx;
         }
-        assert(ub_idx - lb_idx == 1);
+        assert(ub_idx - lb_idx == 1 && "binary search did not finish");
         v->ptr[i] = lb_idx;
     }
 }
